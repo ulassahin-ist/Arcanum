@@ -11,6 +11,7 @@ export default function PdfReader({
 }) {
   const totalPages = useRef(1);
   const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <Pdf
       source={{ uri, cache: false }}
@@ -31,6 +32,6 @@ export default function PdfReader({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = colors => StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.bg },
 });

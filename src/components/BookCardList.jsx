@@ -6,6 +6,7 @@ import { SHADOW } from '../theme/shadows';
 
 export default function BookCardList({ book, onPress }) {
   const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <Pressable onPress={onPress} style={styles.card}>
       <View style={styles.cover}>
@@ -39,7 +40,7 @@ export default function BookCardList({ book, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = colors => StyleSheet.create({
   card: {
     flexDirection: 'row',
     backgroundColor: colors.card,

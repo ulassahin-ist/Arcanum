@@ -9,6 +9,7 @@ import { ChevronLeft } from 'lucide-react-native';
 
 export default function ReaderScreen({ route, navigation }) {
   const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { book } = route.params;
   const [chrome, setChrome] = useState(true);
   const [progress, setProgress] = useState(book.progress || 0);
@@ -61,7 +62,7 @@ export default function ReaderScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = colors => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   topBar: {
     position: 'absolute',

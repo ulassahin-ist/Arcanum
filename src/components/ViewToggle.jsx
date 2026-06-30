@@ -13,6 +13,7 @@ const INDICATOR_WIDTH = (WRAP_WIDTH - WRAP_PADDING * 2) / 2;
 
 export default function ViewToggle({ value, onChange }) {
   const { colors } = useTheme();
+  const styles = getStyles(colors);
   const isGrid = value === 'grid';
 
   const indicatorStyle = useAnimatedStyle(() => ({
@@ -36,7 +37,7 @@ export default function ViewToggle({ value, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = colors => StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     backgroundColor: colors.card,

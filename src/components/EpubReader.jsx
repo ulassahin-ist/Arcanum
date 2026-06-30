@@ -10,6 +10,7 @@ export default function EpubReader({
   onToggleChrome,
 }) {
   const { colors } = useTheme();
+  const styles = getStyles(colors);
   const webRef = useRef(null);
   const [loadError, setLoadError] = useState(null);
   function handleMessage(event) {
@@ -54,6 +55,6 @@ export default function EpubReader({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = colors => StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.bg },
 });

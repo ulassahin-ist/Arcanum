@@ -6,6 +6,7 @@ import { SHADOW_SM } from '../theme/shadows';
 
 export default function BookCardGrid({ book, onPress, width }) {
   const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <Pressable onPress={onPress} style={[styles.wrap, { width }]}>
       <View style={[styles.cover, { height: width * 1.5 }]}>
@@ -36,7 +37,7 @@ export default function BookCardGrid({ book, onPress, width }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = colors => StyleSheet.create({
   wrap: { marginBottom: SPACING.lg },
   cover: {
     width: '100%',

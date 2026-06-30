@@ -38,6 +38,7 @@ function Tabs() {
 
 export default function RootNavigator() {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   return (
     <View
       style={{

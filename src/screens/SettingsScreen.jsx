@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
-import { THEMES, THEME_NAMES } from '../theme/colors';
+import { THEMES, THEME_NAMES } from '../theme/themes';
 
 const LABELS = {
   light: 'Light',

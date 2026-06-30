@@ -29,6 +29,7 @@ const CARD_W =
 
 export default function LibraryScreen({ navigation }) {
   const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [view, setView] = useState('grid');
   const [books, setBooks] = useState([]);
   const [pendingCover, setPendingCover] = useState(null);
@@ -153,7 +154,7 @@ export default function LibraryScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = colors => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: SPACING.lg },
   topBar: {
     flexDirection: 'row',
