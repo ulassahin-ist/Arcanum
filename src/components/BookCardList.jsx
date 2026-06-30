@@ -3,12 +3,18 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { SHADOW } from '../theme/shadows';
+import { Star } from 'lucide-react-native';
 
-export default function BookCardList({ book, onPress }) {
+export default function BookCardList({ book, onPress, onLongPress }) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   return (
-    <Pressable onPress={onPress} style={styles.card}>
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={350}
+      style={styles.card}
+    >
       <View style={styles.cover}>
         {book.coverUri ? (
           <Image source={{ uri: book.coverUri }} style={styles.coverImg} />
@@ -21,9 +27,14 @@ export default function BookCardList({ book, onPress }) {
         )}
       </View>
       <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={1}>
-          {book.title}
-        </Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title} numberOfLines={1}>
+            {book.title}
+          </Text>
+          {book.favorite && (
+            <Star size={13} color={colors.amber} fill={colors.amber} style={styles.titleStar} />
+          )}
+        </View>
         <Text style={styles.author} numberOfLines={1}>
           {book.author}
         </Text>
@@ -66,7 +77,9 @@ const getStyles = colors => StyleSheet.create({
   },
   fallbackTxt: { fontSize: 14, fontWeight: '800', color: colors.green },
   info: { flex: 1, justifyContent: 'center' },
-  title: { fontSize: 15, fontWeight: '600', color: colors.text },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
+  title: { fontSize: 15, fontWeight: '600', color: colors.text, flexShrink: 1 },
+  titleStar: { marginLeft: 6 },
   author: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   progressTrack: {
     height: 4,

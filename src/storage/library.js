@@ -45,3 +45,12 @@ export async function updateCover(id, coverUri) {
   await saveLibrary(updated);
   return updated;
 }
+
+export async function toggleFavorite(id) {
+  const lib = await getLibrary();
+  const updated = lib.map(b =>
+    b.id === id ? { ...b, favorite: !b.favorite } : b,
+  );
+  await saveLibrary(updated);
+  return updated;
+}

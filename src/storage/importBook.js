@@ -35,6 +35,7 @@ export async function importBookFromDevice() {
     fileType,
     coverUri,
     coverChecked,
+    favorite: false,
     addedAt: Date.now(),
     progress: 0,
   };

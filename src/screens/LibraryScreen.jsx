@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
+  Alert,
   Dimensions,
   FlatList,
   Pressable,
@@ -17,7 +18,13 @@ import ViewToggle from '../components/ViewToggle';
 import BookCardGrid from '../components/BookCardGrid';
 import BookCardList from '../components/BookCardList';
 import EpubCoverExtractor from '../components/EpubCoverExtractor';
-import { getLibrary, updateCover } from '../storage/library';
+import ContextMenu from '../components/ContextMenu';
+import {
+  getLibrary,
+  updateCover,
+  removeBook,
+  toggleFavorite,
+} from '../storage/library';
 import { importBookFromDevice } from '../storage/importBook';
 import { Plus } from 'lucide-react-native';
 
@@ -33,6 +40,7 @@ export default function LibraryScreen({ navigation }) {
   const [view, setView] = useState('grid');
   const [books, setBooks] = useState([]);
   const [pendingCover, setPendingCover] = useState(null);
+  const [contextMenu, setContextMenu] = useState({ visible: false, anchor: null, book: null });
 
   function findPendingCover(lib) {
     return lib.find(
@@ -89,6 +97,38 @@ export default function LibraryScreen({ navigation }) {
     navigation.navigate('Reader', { book });
   }
 
+  function openContextMenu(book, event) {
+    const { pageX, pageY } = event.nativeEvent;
+    setContextMenu({ visible: true, anchor: { x: pageX, y: pageY }, book });
+  }
+
+  function closeContextMenu() {
+    setContextMenu(prev => ({ ...prev, visible: false }));
+  }
+
+  async function handleToggleFavorite(book) {
+    await toggleFavorite(book.id);
+    setBooks(await getLibrary());
+  }
+
+  function handleDeleteRequest(book) {
+    Alert.alert(
+      'Delete book?',
+      `"${book.title}" will be removed from your library. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await removeBook(book.id);
+            setBooks(await getLibrary());
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <View style={styles.root}>
       <View style={styles.topBar}>
@@ -124,6 +164,7 @@ export default function LibraryScreen({ navigation }) {
                   book={item}
                   width={CARD_W}
                   onPress={() => openBook(item)}
+                  onLongPress={e => openContextMenu(item, e)}
                 />
               )}
             />
@@ -133,7 +174,11 @@ export default function LibraryScreen({ navigation }) {
               keyExtractor={item => item.id}
               contentContainerStyle={styles.listContent}
               renderItem={({ item }) => (
-                <BookCardList book={item} onPress={() => openBook(item)} />
+                <BookCardList
+                  book={item}
+                  onPress={() => openBook(item)}
+                  onLongPress={e => openContextMenu(item, e)}
+                />
               )}
             />
           )}
@@ -150,6 +195,29 @@ export default function LibraryScreen({ navigation }) {
           onResult={handleCoverResult}
         />
       )}
+
+      <ContextMenu
+        visible={contextMenu.visible}
+        anchor={contextMenu.anchor}
+        onClose={closeContextMenu}
+        items={
+          contextMenu.book
+            ? [
+                {
+                  label: contextMenu.book.favorite
+                    ? 'Remove from Favorites'
+                    : 'Add to Favorites',
+                  onPress: () => handleToggleFavorite(contextMenu.book),
+                },
+                {
+                  label: 'Delete',
+                  destructive: true,
+                  onPress: () => handleDeleteRequest(contextMenu.book),
+                },
+              ]
+            : []
+        }
+      />
     </View>
   );
 }

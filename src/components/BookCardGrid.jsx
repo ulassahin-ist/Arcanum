@@ -3,12 +3,18 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { SHADOW_SM } from '../theme/shadows';
+import { Star } from 'lucide-react-native';
 
-export default function BookCardGrid({ book, onPress, width }) {
+export default function BookCardGrid({ book, onPress, onLongPress, width }) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   return (
-    <Pressable onPress={onPress} style={[styles.wrap, { width }]}>
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={350}
+      style={[styles.wrap, { width }]}
+    >
       <View style={[styles.cover, { height: width * 1.5 }]}>
         {book.coverUri ? (
           <Image source={{ uri: book.coverUri }} style={styles.coverImg} />
@@ -17,6 +23,11 @@ export default function BookCardGrid({ book, onPress, width }) {
             <Text style={styles.fallbackTxt} numberOfLines={3}>
               {book.title}
             </Text>
+          </View>
+        )}
+        {book.favorite && (
+          <View style={styles.favoriteBadge}>
+            <Star size={12} color="#fff" fill="#fff" />
           </View>
         )}
         {book.progress > 0 && (
@@ -69,6 +80,17 @@ const getStyles = colors => StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.15)',
   },
   progressFill: { height: 3, backgroundColor: colors.green },
+  favoriteBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 12,
     fontWeight: '600',

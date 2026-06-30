@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOutUp, FadeInDown, FadeOutDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { updateProgress } from '../storage/library';
 import PdfReader from '../components/PdfReader';
@@ -10,6 +11,7 @@ import { ChevronLeft } from 'lucide-react-native';
 export default function ReaderScreen({ route, navigation }) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
+  const insets = useSafeAreaInsets();
   const { book } = route.params;
   const [chrome, setChrome] = useState(true);
   const [progress, setProgress] = useState(book.progress || 0);
@@ -47,7 +49,7 @@ export default function ReaderScreen({ route, navigation }) {
         <Animated.View
           entering={FadeInUp.duration(220)}
           exiting={FadeOutUp.duration(180)}
-          style={[styles.topBar]}
+          style={[styles.topBar, { paddingTop: insets.top + 10 }]}
         >
           <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
             <ChevronLeft size={26} color={colors.text} />
@@ -58,6 +60,26 @@ export default function ReaderScreen({ route, navigation }) {
           <Text style={styles.pct}>{Math.round(progress * 100)}%</Text>
         </Animated.View>
       )}
+
+      {chrome && (
+        <Animated.View
+          entering={FadeInDown.duration(220)}
+          exiting={FadeOutDown.duration(180)}
+          style={[styles.bottomBar, { paddingBottom: insets.bottom + 10 }]}
+        >
+          <Text style={styles.bottomLabel} numberOfLines={1}>
+            {book.title} · {Math.round(progress * 100)}%
+          </Text>
+          <View style={styles.track}>
+            <View
+              style={[
+                styles.trackFill,
+                { width: `${Math.min(Math.max(progress * 100, 0), 100)}%` },
+              ]}
+            />
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -66,14 +88,14 @@ const getStyles = colors => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   topBar: {
     position: 'absolute',
-    top: 8,
+    top: 0,
     left: 0,
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingBottom: 10,
-    backgroundColor: 'rgba(244,245,247,0.95)',
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -92,4 +114,29 @@ const getStyles = colors => StyleSheet.create({
     marginHorizontal: 8,
   },
   pct: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
+  bottomLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  track: {
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    overflow: 'hidden',
+  },
+  trackFill: {
+    height: 3,
+    backgroundColor: colors.blue,
+  },
 });
