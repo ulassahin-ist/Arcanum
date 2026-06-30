@@ -1,9 +1,18 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { StyleSheet, View, Text, Pressable, PanResponder } from 'react-native';
-import Animated, { FadeInUp, FadeOutUp, FadeInDown, FadeOutDown } from 'react-native-reanimated';
+import Animated, {
+  FadeInUp,
+  FadeOutUp,
+  FadeInDown,
+  FadeOutDown,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
-import { updateProgress, addBookmark, removeBookmark } from '../storage/library';
+import {
+  updateProgress,
+  addBookmark,
+  removeBookmark,
+} from '../storage/library';
 import PdfReader from '../components/PdfReader';
 import EpubReader from '../components/EpubReader';
 import ContextMenu from '../components/ContextMenu';
@@ -181,7 +190,12 @@ export default function ReaderScreen({ route, navigation }) {
               <View
                 style={[
                   styles.trackFill,
-                  { width: `${Math.min(Math.max(displayPercent * 100, 0), 100)}%` },
+                  {
+                    width: `${Math.min(
+                      Math.max(displayPercent * 100, 0),
+                      100,
+                    )}%`,
+                  },
                 ]}
               />
             </View>
@@ -222,84 +236,85 @@ export default function ReaderScreen({ route, navigation }) {
   );
 }
 
-const getStyles = colors => StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  topBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backTxt: { fontSize: 28, color: colors.text, marginTop: -3 },
-  title: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.text,
-    marginHorizontal: 8,
-  },
-  pct: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-  },
-  bottomLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  bottomLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  bookmarkBtn: {
-    marginLeft: 10,
-    padding: 2,
-  },
-  trackTouchArea: {
-    height: 24,
-    justifyContent: 'center',
-  },
-  track: {
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    overflow: 'hidden',
-  },
-  trackFill: {
-    height: 3,
-    backgroundColor: colors.blue,
-  },
-  marker: {
-    position: 'absolute',
-    top: '50%',
-    marginTop: -5,
-    marginLeft: -5,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.amber,
-    borderWidth: 1.5,
-    borderColor: colors.card,
-  },
-});
+const getStyles = colors =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.bg },
+    topBar: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingBottom: 10,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    backBtn: {
+      width: 36,
+      height: 36,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    backTxt: { fontSize: 28, color: colors.text, marginTop: -3 },
+    title: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+      marginHorizontal: 8,
+    },
+    pct: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+    bottomBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: 16,
+      paddingTop: 10,
+    },
+    bottomLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 4,
+    },
+    bottomLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.textMuted,
+      textAlign: 'center',
+    },
+    bookmarkBtn: {
+      marginLeft: 10,
+      padding: 2,
+    },
+    trackTouchArea: {
+      height: 24,
+      justifyContent: 'center',
+    },
+    track: {
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: colors.border,
+      overflow: 'hidden',
+    },
+    trackFill: {
+      height: 3,
+      backgroundColor: colors.blue,
+    },
+    marker: {
+      position: 'absolute',
+      top: '50%',
+      marginTop: -5,
+      marginLeft: -5,
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.amber,
+      borderWidth: 1.5,
+      borderColor: colors.card,
+    },
+  });

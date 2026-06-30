@@ -45,6 +45,7 @@ const PdfReader = forwardRef(function PdfReader(
 
 export default PdfReader;
 
-const getStyles = colors => StyleSheet.create({
-  fill: { flex: 1, backgroundColor: colors.bg },
-});
+const getStyles = colors =>
+  StyleSheet.create({
+    fill: { flex: 1, backgroundColor: colors.bg },
+  });

@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
+import { Library, Settings } from 'lucide-react-native';
 
 import LibraryScreen from '../screens/LibraryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -18,6 +19,7 @@ function Tabs() {
   return (
     <Tab.Navigator
       screenOptions={{
+        tabBarPressColor: 'transparent',
         headerShown: false,
         tabBarActiveTintColor: colors.blue,
         tabBarInactiveTintColor: colors.textMuted,
@@ -27,11 +29,31 @@ function Tabs() {
           height: 52,
           paddingTop: 8,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
       }}
     >
-      <Tab.Screen name="Library" component={LibraryScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen
+        name="Library"
+        component={LibraryScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Library color={color} size={size} />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Settings color={color} size={size} />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
