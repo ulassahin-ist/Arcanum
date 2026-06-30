@@ -1,0 +1,59 @@
+diff --git a/android/app/src/main/assets/epub-reader.html b/android/app/src/main/assets/epub-reader.html
+index 5ccf0cd..47f8e1c 100644
+--- a/android/app/src/main/assets/epub-reader.html
++++ b/android/app/src/main/assets/epub-reader.html
+@@ -190,6 +190,7 @@
+             body: { background: msg.payload.bg, color: msg.payload.text },
+           });
+           rendition.themes.select('app');
++          document.body.style.background = msg.payload.bg;
+         }
+       }
+ 
+diff --git a/src/components/EpubReader.jsx b/src/components/EpubReader.jsx
+index 6da8ebb..1b33fa8 100644
+--- a/src/components/EpubReader.jsx
++++ b/src/components/EpubReader.jsx
+@@ -1,4 +1,4 @@
+-import React, { useRef, useState } from 'react';
++import React, { useEffect, useRef, useState } from 'react';
+ import { StyleSheet, View, Text } from 'react-native';
+ import { WebView } from 'react-native-webview';
+ import { useTheme } from '../theme/ThemeContext';
+@@ -13,6 +13,17 @@ export default function EpubReader({
+   const styles = getStyles(colors);
+   const webRef = useRef(null);
+   const [loadError, setLoadError] = useState(null);
++  const [renditionReady, setRenditionReady] = useState(false);
++
++  function sendTheme() {
++    webRef.current?.postMessage(
++      JSON.stringify({
++        type: 'theme',
++        payload: { bg: colors.readerBg, text: colors.readerText },
++      }),
++    );
++  }
++
+   function handleMessage(event) {
+     const msg = JSON.parse(event.nativeEvent.data);
+     if (msg.type === 'progress')
+@@ -21,8 +32,18 @@ export default function EpubReader({
+     if (msg.type === 'loadError') {
+       setLoadError(msg.payload.message);
+     }
++    if (msg.type === 'ready') {
++      setRenditionReady(true);
++    }
+   }
+ 
++  // The book's rendition only exists inside the WebView after it reports
++  // 'ready', and the theme has to be (re)sent any time it's available or
++  // the app theme changes (e.g. user switches theme mid-read).
++  useEffect(() => {
++    if (renditionReady) sendTheme();
++  }, [renditionReady, colors.readerBg, colors.readerText]);
++
+   const htmlUri = `file:///android_asset/epub-reader.html?src=${encodeURIComponent(
+     'file://' + uri,
+   )}${startCfi ? `&cfi=${encodeURIComponent(startCfi)}` : ''}`;

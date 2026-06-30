@@ -190,6 +190,7 @@
             body: { background: msg.payload.bg, color: msg.payload.text },
           });
           rendition.themes.select('app');
+          document.body.style.background = msg.payload.bg;
         }
       }
 
