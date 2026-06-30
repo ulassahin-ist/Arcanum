@@ -1,0 +1,76 @@
+import React from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { C } from '../theme/colors';
+import { RADIUS, SPACING } from '../theme/spacing';
+import { SHADOW_SM } from '../theme/shadows';
+
+export default function BookCardGrid({ book, onPress, width }) {
+  return (
+    <Pressable onPress={onPress} style={[styles.wrap, { width }]}>
+      <View style={[styles.cover, { height: width * 1.5 }]}>
+        {book.coverUri ? (
+          <Image source={{ uri: book.coverUri }} style={styles.coverImg} />
+        ) : (
+          <View style={styles.fallback}>
+            <Text style={styles.fallbackTxt} numberOfLines={3}>
+              {book.title}
+            </Text>
+          </View>
+        )}
+        {book.progress > 0 && (
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${book.progress * 100}%` },
+              ]}
+            />
+          </View>
+        )}
+      </View>
+      <Text style={styles.title} numberOfLines={1}>
+        {book.title}
+      </Text>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: { marginBottom: SPACING.lg },
+  cover: {
+    width: '100%',
+    borderRadius: RADIUS.sm,
+    overflow: 'hidden',
+    backgroundColor: C.card,
+    ...SHADOW_SM,
+  },
+  coverImg: { width: '100%', height: '100%' },
+  fallback: {
+    flex: 1,
+    backgroundColor: C.greenBg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.sm,
+  },
+  fallbackTxt: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.green,
+    textAlign: 'center',
+  },
+  progressTrack: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+  },
+  progressFill: { height: 3, backgroundColor: C.green },
+  title: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: C.text,
+    marginTop: 6,
+  },
+});
