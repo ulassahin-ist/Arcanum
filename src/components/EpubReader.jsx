@@ -1,14 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { C } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function EpubReader({
   uri,
-  initialProgress,
+  startCfi, // <-- was `initialProgress`, and unused
   onProgress,
   onToggleChrome,
 }) {
+  const { colors } = useTheme();
   const webRef = useRef(null);
   const [loadError, setLoadError] = useState(null);
   function handleMessage(event) {
@@ -20,15 +21,15 @@ export default function EpubReader({
       setLoadError(msg.payload.message);
     }
   }
-  // pass the file path as a query param instead of posting the file content
+
   const htmlUri = `file:///android_asset/epub-reader.html?src=${encodeURIComponent(
     'file://' + uri,
-  )}`;
+  )}${startCfi ? `&cfi=${encodeURIComponent(startCfi)}` : ''}`;
 
   if (loadError) {
     return (
       <View style={styles.loading}>
-        <Text style={{ color: C.text, textAlign: 'center', padding: 16 }}>
+        <Text style={{ color: colors.text, textAlign: 'center', padding: 16 }}>
           Couldn't open this book.{'\n'}
           {loadError}
         </Text>
@@ -54,5 +55,5 @@ export default function EpubReader({
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: C.bg },
+  fill: { flex: 1, backgroundColor: colors.bg },
 });

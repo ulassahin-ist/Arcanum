@@ -4,7 +4,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { C } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS } from '../theme/spacing';
 
 const WRAP_WIDTH = 140;
@@ -12,6 +12,7 @@ const WRAP_PADDING = 2;
 const INDICATOR_WIDTH = (WRAP_WIDTH - WRAP_PADDING * 2) / 2;
 
 export default function ViewToggle({ value, onChange }) {
+  const { colors } = useTheme();
   const isGrid = value === 'grid';
 
   const indicatorStyle = useAnimatedStyle(() => ({
@@ -38,10 +39,10 @@ export default function ViewToggle({ value, onChange }) {
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
-    backgroundColor: C.card,
+    backgroundColor: colors.card,
     borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: C.border,
+    borderColor: colors.border,
     padding: WRAP_PADDING,
     width: WRAP_WIDTH,
     height: 36,
@@ -53,9 +54,9 @@ const styles = StyleSheet.create({
     bottom: 2,
     left: WRAP_PADDING,
     width: INDICATOR_WIDTH,
-    backgroundColor: C.bg,
+    backgroundColor: colors.bg,
     borderRadius: RADIUS.sm - 2,
   },
-  label: { fontSize: 13, fontWeight: '600', color: C.textMuted },
-  labelActive: { color: C.text },
+  label: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+  labelActive: { color: colors.text },
 });

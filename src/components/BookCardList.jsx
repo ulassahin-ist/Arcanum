@@ -1,10 +1,11 @@
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { C } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { SHADOW } from '../theme/shadows';
 
 export default function BookCardList({ book, onPress }) {
+  const { colors } = useTheme();
   return (
     <Pressable onPress={onPress} style={styles.card}>
       <View style={styles.cover}>
@@ -41,7 +42,7 @@ export default function BookCardList({ book, onPress }) {
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: C.card,
+    backgroundColor: colors.card,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: RADIUS.sm - 4,
     overflow: 'hidden',
-    backgroundColor: C.bg,
+    backgroundColor: colors.bg,
     marginRight: SPACING.md,
   },
   coverImg: { width: '100%', height: '100%' },
@@ -60,19 +61,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: C.greenBg,
+    backgroundColor: colors.greenBg,
   },
-  fallbackTxt: { fontSize: 14, fontWeight: '800', color: C.green },
+  fallbackTxt: { fontSize: 14, fontWeight: '800', color: colors.green },
   info: { flex: 1, justifyContent: 'center' },
-  title: { fontSize: 15, fontWeight: '600', color: C.text },
-  author: { fontSize: 12, color: C.textMuted, marginTop: 2 },
+  title: { fontSize: 15, fontWeight: '600', color: colors.text },
+  author: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   progressTrack: {
     height: 4,
-    backgroundColor: C.border,
+    backgroundColor: colors.border,
     borderRadius: 2,
     marginTop: 8,
     overflow: 'hidden',
   },
-  progressFill: { height: 4, backgroundColor: C.green, borderRadius: 2 },
-  progressTxt: { fontSize: 10, color: C.textMuted, marginTop: 4 },
+  progressFill: { height: 4, backgroundColor: colors.green, borderRadius: 2 },
+  progressTxt: { fontSize: 10, color: colors.textMuted, marginTop: 4 },
 });

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { C } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { SHADOW_SM } from '../theme/shadows';
 
 export default function BookCardGrid({ book, onPress, width }) {
+  const { colors } = useTheme();
   return (
     <Pressable onPress={onPress} style={[styles.wrap, { width }]}>
       <View style={[styles.cover, { height: width * 1.5 }]}>
@@ -41,13 +42,13 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: RADIUS.sm,
     overflow: 'hidden',
-    backgroundColor: C.card,
+    backgroundColor: colors.card,
     ...SHADOW_SM,
   },
   coverImg: { width: '100%', height: '100%' },
   fallback: {
     flex: 1,
-    backgroundColor: C.greenBg,
+    backgroundColor: colors.greenBg,
     justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.sm,
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
   fallbackTxt: {
     fontSize: 13,
     fontWeight: '700',
-    color: C.green,
+    color: colors.green,
     textAlign: 'center',
   },
   progressTrack: {
@@ -66,11 +67,11 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: 'rgba(0,0,0,0.15)',
   },
-  progressFill: { height: 3, backgroundColor: C.green },
+  progressFill: { height: 3, backgroundColor: colors.green },
   title: {
     fontSize: 12,
     fontWeight: '600',
-    color: C.text,
+    color: colors.text,
     marginTop: 6,
   },
 });

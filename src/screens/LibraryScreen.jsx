@@ -10,7 +10,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import RNFS from 'react-native-fs';
-import { C } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { SPACING } from '../theme/spacing';
 import { SHADOW_SM } from '../theme/shadows';
 import ViewToggle from '../components/ViewToggle';
@@ -28,6 +28,7 @@ const CARD_W =
   (SCREEN_W - SPACING.lg * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS;
 
 export default function LibraryScreen({ navigation }) {
+  const { colors } = useTheme();
   const [view, setView] = useState('grid');
   const [books, setBooks] = useState([]);
   const [pendingCover, setPendingCover] = useState(null);
@@ -153,7 +154,7 @@ export default function LibraryScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg, paddingHorizontal: SPACING.lg },
+  root: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: SPACING.lg },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.lg,
     marginBottom: SPACING.lg,
   },
-  heading: { fontSize: 24, fontWeight: '800', color: C.text },
+  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
   gridContent: { paddingBottom: 100, gap: GRID_GAP },
   listContent: { paddingBottom: 100 },
   emptyWrap: {
@@ -173,17 +174,17 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: C.text,
+    color: colors.text,
     marginBottom: 4,
   },
   emptySub: {
     fontSize: 13,
-    color: C.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 18,
   },
   importBtn: {
-    backgroundColor: C.blue,
+    backgroundColor: colors.blue,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
@@ -196,11 +197,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 18,
-    backgroundColor: C.blue,
+    backgroundColor: colors.blue,
     justifyContent: 'center',
     alignItems: 'center',
     ...SHADOW_SM,
-    shadowColor: C.blue,
+    shadowColor: colors.blue,
   },
   fabTxt: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
 });

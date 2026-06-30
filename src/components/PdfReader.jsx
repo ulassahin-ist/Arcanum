@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import Pdf from 'react-native-pdf';
-import { C } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function PdfReader({
   uri,
@@ -10,7 +10,7 @@ export default function PdfReader({
   onToggleChrome,
 }) {
   const totalPages = useRef(1);
-
+  const { colors } = useTheme();
   return (
     <Pdf
       source={{ uri, cache: false }}
@@ -32,5 +32,5 @@ export default function PdfReader({
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: C.bg },
+  fill: { flex: 1, backgroundColor: colors.bg },
 });

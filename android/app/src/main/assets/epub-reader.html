@@ -79,17 +79,66 @@
           .then(() => book.locations.generate(1000))
           .then(() => post('locationsReady', {}));
 
-        rendition.on('click', event => {
-          const width = window.innerWidth;
-          const x = event.clientX;
+        attachSwipeHandlers(rendition);
+      }
 
-          if (x < width * 0.25) {
-            prevPage();
-          } else if (x > width * 0.75) {
-            nextPage();
-          } else {
+      // --- swipe-to-turn-page, tap-to-toggle-chrome ---
+      function attachSwipeHandlers(rendition) {
+        const SWIPE_THRESHOLD = 40; // px, minimum horizontal movement to count as a swipe
+        const TAP_SLOP = 10; // px, max movement still considered a "tap"
+
+        let startX = 0;
+        let startY = 0;
+        let tracking = false;
+        let lastActionTime = 0;
+        const DEDUPE_MS = 350; // ignore a second event firing right after one we already handled
+
+        function onTouchStart(e) {
+          const t = e.touches ? e.touches[0] : e;
+          startX = t.clientX;
+          startY = t.clientY;
+          tracking = true;
+        }
+
+        function onTouchEnd(e) {
+          if (!tracking) return;
+          tracking = false;
+
+          const now = Date.now();
+          if (now - lastActionTime < DEDUPE_MS) return;
+
+          const t = e.changedTouches ? e.changedTouches[0] : e;
+          const dx = t.clientX - startX;
+          const dy = t.clientY - startY;
+          const absDx = Math.abs(dx);
+          const absDy = Math.abs(dy);
+
+          // Horizontal swipe: turn page. Ignore if mostly vertical
+          // (accidental scroll/drag).
+          if (absDx > SWIPE_THRESHOLD && absDx > absDy) {
+            lastActionTime = now;
+            if (dx < 0) {
+              nextPage();
+            } else {
+              prevPage();
+            }
+            return;
+          }
+
+          // Otherwise, if it barely moved at all, treat as a tap.
+          if (absDx < TAP_SLOP && absDy < TAP_SLOP) {
+            lastActionTime = now;
             post('toggleChrome', {});
           }
+        }
+
+        // epub.js renders each page/spread inside its own iframe. This hook
+        // fires every time new content is rendered, so we re-attach listeners
+        // inside that iframe's document each time.
+        rendition.hooks.content.register(contents => {
+          const doc = contents.document;
+          doc.addEventListener('touchstart', onTouchStart, { passive: true });
+          doc.addEventListener('touchend', onTouchEnd, { passive: true });
         });
       }
 
@@ -136,6 +185,12 @@
         const msg = JSON.parse(e.data);
         if (msg.type === 'next') nextPage();
         if (msg.type === 'prev') prevPage();
+        if (msg.type === 'theme' && rendition) {
+          rendition.themes.register('app', {
+            body: { background: msg.payload.bg, color: msg.payload.text },
+          });
+          rendition.themes.select('app');
+        }
       }
 
       (function init() {

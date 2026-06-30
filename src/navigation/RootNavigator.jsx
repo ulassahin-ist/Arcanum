@@ -1,9 +1,10 @@
 import React from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { C } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 
 import LibraryScreen from '../screens/LibraryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -13,19 +14,17 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function Tabs() {
-  const insets = useSafeAreaInsets();
-
+  const { colors } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: C.blue,
-        tabBarInactiveTintColor: C.textMuted,
+        tabBarActiveTintColor: colors.blue,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: C.card,
-          borderTopColor: C.border,
-          height: 52 + insets.bottom,
-          paddingBottom: Math.max(insets.bottom, 8),
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+          height: 52,
           paddingTop: 8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
@@ -38,16 +37,26 @@ function Tabs() {
 }
 
 export default function RootNavigator() {
+  const insets = useSafeAreaInsets();
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Tabs" component={Tabs} />
-        <Stack.Screen
-          name="Reader"
-          component={ReaderScreen}
-          options={{ animation: 'slide_from_bottom' }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View
+      style={{
+        flex: 1,
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+        backgroundColor: colors.bg,
+      }}
+    >
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Tabs" component={Tabs} />
+          <Stack.Screen
+            name="Reader"
+            component={ReaderScreen}
+            options={{ animation: 'slide_from_bottom' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }
