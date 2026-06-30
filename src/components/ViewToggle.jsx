@@ -7,11 +7,19 @@ import Animated, {
 import { C } from '../theme/colors';
 import { RADIUS } from '../theme/spacing';
 
+const WRAP_WIDTH = 140;
+const WRAP_PADDING = 2;
+const INDICATOR_WIDTH = (WRAP_WIDTH - WRAP_PADDING * 2) / 2;
+
 export default function ViewToggle({ value, onChange }) {
   const isGrid = value === 'grid';
 
   const indicatorStyle = useAnimatedStyle(() => ({
-    left: withTiming(isGrid ? 2 : '50%', { duration: 220 }),
+    transform: [
+      {
+        translateX: withTiming(isGrid ? 0 : INDICATOR_WIDTH, { duration: 220 }),
+      },
+    ],
   }));
 
   return (
@@ -34,8 +42,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: C.border,
-    padding: 2,
-    width: 140,
+    padding: WRAP_PADDING,
+    width: WRAP_WIDTH,
     height: 36,
   },
   half: { flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
@@ -43,7 +51,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     bottom: 2,
-    width: '48%',
+    left: WRAP_PADDING,
+    width: INDICATOR_WIDTH,
     backgroundColor: C.bg,
     borderRadius: RADIUS.sm - 2,
   },

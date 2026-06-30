@@ -1,68 +1,57 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { StyleSheet, View, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
-import RNFS from 'react-native-fs';
 import { C } from '../theme/colors';
 
-export default function EpubReader({ uri, onProgress, onToggleChrome }) {
+export default function EpubReader({
+  uri,
+  initialProgress,
+  onProgress,
+  onToggleChrome,
+}) {
   const webRef = useRef(null);
-  const [base64, setBase64] = useState(null);
-
-  useEffect(() => {
-    RNFS.readFile(uri, 'base64').then(setBase64);
-  }, [uri]);
-
+  const [loadError, setLoadError] = useState(null);
   function handleMessage(event) {
     const msg = JSON.parse(event.nativeEvent.data);
-    if (msg.type === 'ready' && base64) {
-      webRef.current.postMessage(
-        JSON.stringify({ type: 'load', payload: { base64 } }),
-      );
-    }
-    if (msg.type === 'progress') {
-      onProgress(msg.payload.percent || 0);
-    }
-    if (msg.type === 'toggleChrome') {
-      onToggleChrome();
+    if (msg.type === 'progress') onProgress(msg.payload.percent || 0);
+    if (msg.type === 'toggleChrome') onToggleChrome();
+    if (msg.type === 'loadError') {
+      setLoadError(msg.payload.message);
     }
   }
+  // pass the file path as a query param instead of posting the file content
+  const htmlUri = `file:///android_asset/epub-reader.html?src=${encodeURIComponent(
+    'file://' + uri,
+  )}`;
 
-  // re-send load once base64 is ready, in case webview loaded first
-  useEffect(() => {
-    if (base64 && webRef.current) {
-      webRef.current.postMessage(
-        JSON.stringify({ type: 'load', payload: { base64 } }),
-      );
-    }
-  }, [base64]);
-
-  if (!base64) {
+  if (loadError) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={C.blue} />
+        <Text style={{ color: C.text, textAlign: 'center', padding: 16 }}>
+          Couldn't open this book.{'\n'}
+          {loadError}
+        </Text>
       </View>
     );
   }
-
   return (
-    <WebView
-      ref={webRef}
-      originWhitelist={['*']}
-      source={{ uri: 'file:///android_asset/epub-reader.html' }}
-      onMessage={handleMessage}
-      javaScriptEnabled
-      domStorageEnabled
-      style={styles.fill}
-    />
+    <View style={styles.fill}>
+      <WebView
+        ref={webRef}
+        originWhitelist={['*']}
+        source={{ uri: htmlUri }}
+        onMessage={handleMessage}
+        javaScriptEnabled
+        domStorageEnabled
+        allowFileAccess
+        allowFileAccessFromFileURLs
+        allowUniversalAccessFromFileURLs
+        style={styles.fill}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: C.bg },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: C.bg,
-  },
 });

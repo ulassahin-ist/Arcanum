@@ -4,6 +4,7 @@ import { addBook } from './library';
 
 export async function importBookFromDevice() {
   const [result] = await pick({
+    mode: 'open',
     type: [types.pdf, 'application/epub+zip'],
   });
 

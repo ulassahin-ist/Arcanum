@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { C } from '../theme/colors';
 import { updateProgress } from '../storage/library';
 import PdfReader from '../components/PdfReader';
@@ -39,7 +40,11 @@ export default function ReaderScreen({ route, navigation }) {
       )}
 
       {chrome && (
-        <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+        <Animated.View
+          entering={FadeInUp.duration(220)}
+          exiting={FadeOutUp.duration(180)}
+          style={[styles.topBar, { paddingTop: insets.top + 8 }]}
+        >
           <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backTxt}>‹</Text>
           </Pressable>
@@ -47,7 +52,7 @@ export default function ReaderScreen({ route, navigation }) {
             {book.title}
           </Text>
           <Text style={styles.pct}>{Math.round(progress * 100)}%</Text>
-        </View>
+        </Animated.View>
       )}
     </View>
   );

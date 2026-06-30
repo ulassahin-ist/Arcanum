@@ -7,21 +7,17 @@ export default function PdfReader({ uri, onProgress, onToggleChrome }) {
   const totalPages = useRef(1);
 
   return (
-    <Pressable style={styles.fill} onPress={onToggleChrome}>
-      <Pdf
-        source={{ uri, cache: true }}
-        style={styles.fill}
-        enablePaging
-        horizontal
-        onLoadComplete={numberOfPages => {
-          totalPages.current = numberOfPages;
-        }}
-        onPageChanged={page => {
-          onProgress(page / totalPages.current);
-        }}
-        onError={err => console.warn('PDF load error', err)}
-      />
-    </Pressable>
+    <Pdf
+      source={{ uri, cache: false }}
+      fitPolicy={0}
+      style={styles.fill}
+      enablePaging
+      horizontal
+      onPageSingleTap={onToggleChrome}
+      onLoadComplete={n => (totalPages.current = n)}
+      onPageChanged={page => onProgress(page / totalPages.current)}
+      onError={err => console.warn('PDF load error', err)}
+    />
   );
 }
 

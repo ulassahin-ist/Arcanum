@@ -22,8 +22,8 @@
   </head>
   <body>
     <div id="viewer"></div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js"></script>
+    <script src="jszip.min.js"></script>
+    <script src="epub.min.js"></script>
     <script>
       let book, rendition;
 
@@ -33,8 +33,8 @@
         );
       }
 
-      function loadBook(base64Data, startCfi) {
-        book = ePub(base64ToArrayBuffer(base64Data));
+      function loadBook(arrayBuffer, startCfi) {
+        book = ePub(arrayBuffer);
         rendition = book.renderTo('viewer', {
           width: '100%',
           height: '100%',
@@ -53,21 +53,10 @@
         rendition.on('rendered', () => post('ready', {}));
 
         book.ready
-          .then(() => {
-            return book.locations.generate(1000);
-          })
-          .then(() => {
-            post('locationsReady', {});
-          });
+          .then(() => book.locations.generate(1000))
+          .then(() => post('locationsReady', {}));
 
         rendition.on('click', () => post('toggleChrome', {}));
-      }
-
-      function base64ToArrayBuffer(base64) {
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        return bytes.buffer;
       }
 
       function nextPage() {
@@ -77,16 +66,39 @@
         rendition && rendition.prev();
       }
 
+      // page turns can still come from RN (e.g. tap zones rendered outside the webview)
       document.addEventListener('message', handleMessage);
       window.addEventListener('message', handleMessage);
 
       function handleMessage(e) {
         const msg = JSON.parse(e.data);
-        if (msg.type === 'load')
-          loadBook(msg.payload.base64, msg.payload.startCfi);
         if (msg.type === 'next') nextPage();
         if (msg.type === 'prev') prevPage();
       }
+
+      // kick off the actual file load as soon as the page itself is ready —
+      // no more waiting on a postMessage handshake carrying the book's bytes
+      (function init() {
+        const params = new URLSearchParams(window.location.search);
+        const fileUri = params.get('src');
+        const startCfi = params.get('cfi') || undefined;
+
+        if (!fileUri) {
+          console.error('epub-reader.html: missing src param');
+          return;
+        }
+
+        fetch(fileUri)
+          .then(res => {
+            if (!res.ok) throw new Error('fetch failed: ' + res.status);
+            return res.arrayBuffer();
+          })
+          .then(buffer => loadBook(buffer, startCfi))
+          .catch(err => {
+            console.error('epub load error', err);
+            post('loadError', { message: String(err) });
+          });
+      })();
     </script>
   </body>
 </html>
