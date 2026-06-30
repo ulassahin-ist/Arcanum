@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import {
-  Alert,
   Dimensions,
   FlatList,
   Pressable,
@@ -19,6 +18,7 @@ import BookCardGrid from '../components/BookCardGrid';
 import BookCardList from '../components/BookCardList';
 import EpubCoverExtractor from '../components/EpubCoverExtractor';
 import ContextMenu from '../components/ContextMenu';
+import ConfirmDialog from '../components/ConfirmDialog';
 import {
   getLibrary,
   updateCover,
@@ -40,8 +40,15 @@ export default function LibraryScreen({ navigation }) {
   const [view, setView] = useState('grid');
   const [books, setBooks] = useState([]);
   const [pendingCover, setPendingCover] = useState(null);
-  const [contextMenu, setContextMenu] = useState({ visible: false, anchor: null, book: null });
-
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    anchor: null,
+    book: null,
+  });
+  const [confirmDialog, setConfirmDialog] = useState({
+    visible: false,
+    book: null,
+  });
   function findPendingCover(lib) {
     return lib.find(
       b => b.fileType === 'epub' && !b.coverUri && !b.coverChecked,
@@ -112,23 +119,28 @@ export default function LibraryScreen({ navigation }) {
   }
 
   function handleDeleteRequest(book) {
-    Alert.alert(
-      'Delete book?',
-      `"${book.title}" will be removed from your library. This can't be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            await removeBook(book.id);
-            setBooks(await getLibrary());
-          },
-        },
-      ],
-    );
+    setConfirmDialog({
+      visible: true,
+      book,
+    });
   }
+  async function handleConfirmDelete() {
+    if (!confirmDialog.book) return;
 
+    await removeBook(confirmDialog.book.id);
+    setBooks(await getLibrary());
+
+    setConfirmDialog({
+      visible: false,
+      book: null,
+    });
+  }
+  function handleCancelDelete() {
+    setConfirmDialog({
+      visible: false,
+      book: null,
+    });
+  }
   return (
     <View style={styles.root}>
       <View style={styles.topBar}>
@@ -218,59 +230,78 @@ export default function LibraryScreen({ navigation }) {
             : []
         }
       />
+      <ConfirmDialog
+        visible={confirmDialog.visible}
+        title="Delete book?"
+        message={
+          confirmDialog.book
+            ? `"${confirmDialog.book.title}" will be removed from your library. This can't be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </View>
   );
 }
 
-const getStyles = colors => StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: SPACING.lg },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.lg,
-  },
-  heading: { fontSize: 24, fontWeight: '800', color: colors.text },
-  gridContent: { paddingBottom: 100, gap: GRID_GAP },
-  listContent: { paddingBottom: 100 },
-  emptyWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  emptySub: {
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginBottom: 18,
-  },
-  importBtn: {
-    backgroundColor: colors.blue,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  importBtnTxt: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: colors.blue,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...SHADOW_SM,
-    shadowColor: colors.blue,
-  },
-  fabTxt: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
-});
+const getStyles = colors =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: colors.bg,
+      paddingHorizontal: SPACING.lg,
+    },
+    topBar: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: SPACING.lg,
+      marginBottom: SPACING.lg,
+    },
+    heading: { fontSize: 24, fontWeight: '800', color: colors.text },
+    gridContent: { paddingBottom: 100, gap: GRID_GAP },
+    listContent: { paddingBottom: 100 },
+    emptyWrap: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: SPACING.xl,
+    },
+    emptyTitle: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    emptySub: {
+      fontSize: 13,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginBottom: 18,
+    },
+    importBtn: {
+      backgroundColor: colors.blue,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 12,
+    },
+    importBtnTxt: { color: '#fff', fontWeight: '700', fontSize: 14 },
+    fab: {
+      position: 'absolute',
+      bottom: 24,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 18,
+      backgroundColor: colors.blue,
+      justifyContent: 'center',
+      alignItems: 'center',
+      ...SHADOW_SM,
+      shadowColor: colors.blue,
+    },
+    fabTxt: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
+  });

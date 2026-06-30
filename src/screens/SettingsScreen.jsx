@@ -45,7 +45,7 @@ export default function SettingsScreen() {
             >
               <View style={[styles.swatchDot, { backgroundColor: t.blue }]} />
               <Text style={[styles.swatchLabel, { color: t.text }]}>
-                {LABELS[name]}
+                {name}
               </Text>
             </Pressable>
           );
