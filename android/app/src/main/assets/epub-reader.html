@@ -17,6 +17,8 @@
       #viewer {
         width: 100%;
         height: 100%;
+        display: flex;
+        justify-content: center;
       }
     </style>
   </head>
@@ -53,12 +55,16 @@
       function loadBook(arrayBuffer, startCfi) {
         book = ePub(arrayBuffer);
         rendition = book.renderTo('viewer', {
-          width: '100%',
-          height: '100%',
+          width: window.innerWidth,
+          height: window.innerHeight,
           flow: 'paginated',
           spread: 'none',
         });
         rendition.display(startCfi || undefined);
+
+        window.addEventListener('resize', () => {
+          rendition && rendition.resize(window.innerWidth, window.innerHeight);
+        });
 
         rendition.on('relocated', location => {
           const pct = book.locations.length()
@@ -87,6 +93,35 @@
         });
       }
 
+      function extractCover(arrayBuffer) {
+        const b = ePub(arrayBuffer);
+        return b.ready
+          .then(() => b.coverUrl())
+          .then(url => {
+            if (!url) {
+              post('cover', { base64: null });
+              return;
+            }
+            return fetch(url)
+              .then(res => res.blob())
+              .then(
+                blob =>
+                  new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                  }),
+              )
+              .then(dataUrl => {
+                post('cover', { base64: dataUrl.split(',')[1] });
+              });
+          })
+          .catch(err => {
+            post('cover', { base64: null, error: String(err) });
+          });
+      }
+
       function nextPage() {
         rendition && rendition.next();
       }
@@ -107,6 +142,7 @@
         const params = new URLSearchParams(window.location.search);
         const fileUri = params.get('src');
         const startCfi = params.get('cfi') || undefined;
+        const mode = params.get('mode') || 'read';
 
         if (!fileUri) {
           console.error('epub-reader.html: missing src param');
@@ -115,10 +151,16 @@
         }
 
         readLocalFile(fileUri)
-          .then(buffer => loadBook(buffer, startCfi))
+          .then(buffer =>
+            mode === 'cover'
+              ? extractCover(buffer)
+              : loadBook(buffer, startCfi),
+          )
           .catch(err => {
             console.error('epub load error', err);
-            post('loadError', { message: String(err) });
+            post(mode === 'cover' ? 'cover' : 'loadError', {
+              message: String(err),
+            });
           });
       })();
     </script>

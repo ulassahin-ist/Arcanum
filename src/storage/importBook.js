@@ -1,5 +1,6 @@
 import { pick, types } from '@react-native-documents/picker';
 import RNFS from 'react-native-fs';
+import PdfThumbnail from 'react-native-pdf-thumbnail';
 import { addBook } from './library';
 
 export async function importBookFromDevice() {
@@ -14,13 +15,26 @@ export async function importBookFromDevice() {
 
   const fileType = result.name.toLowerCase().endsWith('.epub') ? 'epub' : 'pdf';
 
+  let coverUri = null;
+  let coverChecked = false;
+  if (fileType === 'pdf') {
+    try {
+      const { uri } = await PdfThumbnail.generate(destPath, 0);
+      coverUri = uri;
+    } catch (e) {
+      coverUri = null;
+    }
+    coverChecked = true; // pdf cover is one-shot, no retry needed
+  }
+
   const book = {
     id: `${Date.now()}`,
     title: result.name.replace(/\.(epub|pdf)$/i, ''),
     author: 'Unknown',
     fileUri: destPath,
     fileType,
-    coverUri: null,
+    coverUri,
+    coverChecked,
     addedAt: Date.now(),
     progress: 0,
   };

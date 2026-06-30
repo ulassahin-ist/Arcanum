@@ -9,13 +9,15 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import RNFS from 'react-native-fs';
 import { C } from '../theme/colors';
 import { SPACING } from '../theme/spacing';
 import { SHADOW_SM } from '../theme/shadows';
 import ViewToggle from '../components/ViewToggle';
 import BookCardGrid from '../components/BookCardGrid';
 import BookCardList from '../components/BookCardList';
-import { getLibrary } from '../storage/library';
+import EpubCoverExtractor from '../components/EpubCoverExtractor';
+import { getLibrary, updateCover } from '../storage/library';
 import { importBookFromDevice } from '../storage/importBook';
 import { Plus } from 'lucide-react-native';
 
@@ -28,12 +30,21 @@ const CARD_W =
 export default function LibraryScreen({ navigation }) {
   const [view, setView] = useState('grid');
   const [books, setBooks] = useState([]);
+  const [pendingCover, setPendingCover] = useState(null);
+
+  function findPendingCover(lib) {
+    return lib.find(
+      b => b.fileType === 'epub' && !b.coverUri && !b.coverChecked,
+    );
+  }
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       getLibrary().then(lib => {
-        if (active) setBooks(lib);
+        if (!active) return;
+        setBooks(lib);
+        setPendingCover(findPendingCover(lib));
       });
       return () => {
         active = false;
@@ -41,10 +52,35 @@ export default function LibraryScreen({ navigation }) {
     }, []),
   );
 
+  async function handleCoverResult(base64) {
+    const book = pendingCover;
+    setPendingCover(null);
+    if (!book) return;
+
+    let coverUri = null;
+    if (base64) {
+      try {
+        const dir = `${RNFS.DocumentDirectoryPath}/covers`;
+        await RNFS.mkdir(dir).catch(() => {});
+        const dest = `${dir}/${book.id}.jpg`;
+        await RNFS.writeFile(dest, base64, 'base64');
+        coverUri = 'file://' + dest;
+      } catch (e) {
+        coverUri = null;
+      }
+    }
+
+    await updateCover(book.id, coverUri);
+    const lib = await getLibrary();
+    setBooks(lib);
+    setPendingCover(findPendingCover(lib));
+  }
+
   async function handleImport() {
     await importBookFromDevice();
     const lib = await getLibrary();
     setBooks(lib);
+    if (!pendingCover) setPendingCover(findPendingCover(lib));
   }
 
   function openBook(book) {
@@ -105,6 +141,13 @@ export default function LibraryScreen({ navigation }) {
       <Pressable style={styles.fab} onPress={handleImport}>
         <Plus size={28} color="#fff" />
       </Pressable>
+
+      {pendingCover && (
+        <EpubCoverExtractor
+          uri={pendingCover.fileUri}
+          onResult={handleCoverResult}
+        />
+      )}
     </View>
   );
 }

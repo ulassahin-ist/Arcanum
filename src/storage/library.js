@@ -36,3 +36,12 @@ export async function updateProgress(id, progress, extra = {}) {
   );
   await saveLibrary(updated);
 }
+
+export async function updateCover(id, coverUri) {
+  const lib = await getLibrary();
+  const updated = lib.map(b =>
+    b.id === id ? { ...b, coverUri, coverChecked: true } : b,
+  );
+  await saveLibrary(updated);
+  return updated;
+}
