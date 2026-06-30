@@ -1,19 +1,36 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useTheme } from '../theme/ThemeContext';
 
-export default function EpubReader({
-  uri,
-  startCfi, // <-- was `initialProgress`, and unused
-  onProgress,
-  onToggleChrome,
-}) {
+const EpubReader = forwardRef(function EpubReader(
+  {
+    uri,
+    startCfi, // <-- was `initialProgress`, and unused
+    onProgress,
+    onToggleChrome,
+  },
+  ref,
+) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const webRef = useRef(null);
   const [loadError, setLoadError] = useState(null);
   const [renditionReady, setRenditionReady] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    seekTo({ percent, cfi }) {
+      webRef.current?.postMessage(
+        JSON.stringify({ type: 'seek', payload: { percent, cfi } }),
+      );
+    },
+  }));
 
   function sendTheme() {
     webRef.current?.postMessage(
@@ -74,7 +91,9 @@ export default function EpubReader({
       />
     </View>
   );
-}
+});
+
+export default EpubReader;
 
 const getStyles = colors => StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.bg },

@@ -28,6 +28,8 @@
     <script src="epub.min.js"></script>
     <script>
       let book, rendition;
+      let locationsReady = false;
+      let pendingSeekPercent = null;
 
       function post(type, payload) {
         window.ReactNativeWebView.postMessage(
@@ -77,7 +79,15 @@
 
         book.ready
           .then(() => book.locations.generate(1000))
-          .then(() => post('locationsReady', {}));
+          .then(() => {
+            locationsReady = true;
+            post('locationsReady', {});
+            if (pendingSeekPercent != null) {
+              const cfi = book.locations.cfiFromPercentage(pendingSeekPercent);
+              pendingSeekPercent = null;
+              rendition.display(cfi);
+            }
+          });
 
         attachSwipeHandlers(rendition);
       }
@@ -191,6 +201,20 @@
           });
           rendition.themes.select('app');
           document.body.style.background = msg.payload.bg;
+        }
+        if (msg.type === 'seek' && rendition) {
+          if (msg.payload.cfi) {
+            rendition.display(msg.payload.cfi);
+          } else if (typeof msg.payload.percent === 'number') {
+            if (locationsReady) {
+              const cfi = book.locations.cfiFromPercentage(msg.payload.percent);
+              rendition.display(cfi);
+            } else {
+              // Location index isn't built yet (rare, only right after open);
+              // apply it as soon as it is.
+              pendingSeekPercent = msg.payload.percent;
+            }
+          }
         }
       }
 

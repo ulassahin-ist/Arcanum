@@ -54,3 +54,28 @@ export async function toggleFavorite(id) {
   await saveLibrary(updated);
   return updated;
 }
+
+export async function addBookmark(id, bookmark) {
+  const lib = await getLibrary();
+  const updated = lib.map(b =>
+    b.id === id
+      ? { ...b, bookmarks: [...(b.bookmarks || []), bookmark] }
+      : b,
+  );
+  await saveLibrary(updated);
+  return updated;
+}
+
+export async function removeBookmark(id, bookmarkId) {
+  const lib = await getLibrary();
+  const updated = lib.map(b =>
+    b.id === id
+      ? {
+          ...b,
+          bookmarks: (b.bookmarks || []).filter(bm => bm.id !== bookmarkId),
+        }
+      : b,
+  );
+  await saveLibrary(updated);
+  return updated;
+}
