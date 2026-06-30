@@ -6,6 +6,7 @@ import { C } from '../theme/colors';
 import { updateProgress } from '../storage/library';
 import PdfReader from '../components/PdfReader';
 import EpubReader from '../components/EpubReader';
+import { ChevronLeft } from 'lucide-react-native';
 
 export default function ReaderScreen({ route, navigation }) {
   const { book } = route.params;
@@ -14,26 +15,29 @@ export default function ReaderScreen({ route, navigation }) {
   const [progress, setProgress] = useState(book.progress || 0);
 
   const handleProgress = useCallback(
-    p => {
+    (p, extra) => {
       setProgress(p);
-      updateProgress(book.id, p);
+      if (book.fileType === 'pdf') {
+        updateProgress(book.id, p, { page: extra });
+      } else {
+        updateProgress(book.id, p, { progressCfi: extra });
+      }
     },
-    [book.id],
+    [book.id, book.fileType],
   );
-
   return (
     <View style={styles.root}>
       {book.fileType === 'pdf' ? (
         <PdfReader
           uri={book.fileUri}
-          initialProgress={book.progress}
+          initialPage={book.page}
           onProgress={handleProgress}
           onToggleChrome={() => setChrome(v => !v)}
         />
       ) : (
         <EpubReader
           uri={book.fileUri}
-          initialProgress={book.progress}
+          startCfi={book.progressCfi}
           onProgress={handleProgress}
           onToggleChrome={() => setChrome(v => !v)}
         />
@@ -46,7 +50,7 @@ export default function ReaderScreen({ route, navigation }) {
           style={[styles.topBar, { paddingTop: insets.top + 8 }]}
         >
           <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backTxt}>‹</Text>
+            <ChevronLeft size={26} color={C.text} />
           </Pressable>
           <Text style={styles.title} numberOfLines={1}>
             {book.title}

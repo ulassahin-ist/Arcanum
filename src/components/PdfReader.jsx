@@ -1,21 +1,31 @@
 import React, { useRef } from 'react';
-import { StyleSheet, Pressable } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Pdf from 'react-native-pdf';
 import { C } from '../theme/colors';
 
-export default function PdfReader({ uri, onProgress, onToggleChrome }) {
+export default function PdfReader({
+  uri,
+  initialPage,
+  onProgress,
+  onToggleChrome,
+}) {
   const totalPages = useRef(1);
 
   return (
     <Pdf
       source={{ uri, cache: false }}
-      fitPolicy={0}
       style={styles.fill}
       enablePaging
       horizontal
+      page={initialPage || 1}
+      fitPolicy={0}
       onPageSingleTap={onToggleChrome}
-      onLoadComplete={n => (totalPages.current = n)}
-      onPageChanged={page => onProgress(page / totalPages.current)}
+      onLoadComplete={numberOfPages => {
+        totalPages.current = numberOfPages;
+      }}
+      onPageChanged={page => {
+        onProgress(page / totalPages.current, page);
+      }}
       onError={err => console.warn('PDF load error', err)}
     />
   );

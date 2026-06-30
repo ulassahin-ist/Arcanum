@@ -13,7 +13,8 @@ export default function EpubReader({
   const [loadError, setLoadError] = useState(null);
   function handleMessage(event) {
     const msg = JSON.parse(event.nativeEvent.data);
-    if (msg.type === 'progress') onProgress(msg.payload.percent || 0);
+    if (msg.type === 'progress')
+      onProgress(msg.payload.percent || 0, msg.payload.cfi);
     if (msg.type === 'toggleChrome') onToggleChrome();
     if (msg.type === 'loadError') {
       setLoadError(msg.payload.message);

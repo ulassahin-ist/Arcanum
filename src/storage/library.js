@@ -29,8 +29,10 @@ export async function removeBook(id) {
   return updated;
 }
 
-export async function updateProgress(id, progress) {
+export async function updateProgress(id, progress, extra = {}) {
   const lib = await getLibrary();
-  const updated = lib.map(b => (b.id === id ? { ...b, progress } : b));
+  const updated = lib.map(b =>
+    b.id === id ? { ...b, progress, ...extra } : b,
+  );
   await saveLibrary(updated);
 }

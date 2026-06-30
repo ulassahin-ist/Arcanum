@@ -17,6 +17,7 @@ import BookCardGrid from '../components/BookCardGrid';
 import BookCardList from '../components/BookCardList';
 import { getLibrary } from '../storage/library';
 import { importBookFromDevice } from '../storage/importBook';
+import { Plus } from 'lucide-react-native';
 
 const SCREEN_W = Dimensions.get('window').width;
 const GRID_COLS = 3;
@@ -102,7 +103,7 @@ export default function LibraryScreen({ navigation }) {
       )}
 
       <Pressable style={styles.fab} onPress={handleImport}>
-        <Text style={styles.fabTxt}>+</Text>
+        <Plus size={28} color="#fff" />
       </Pressable>
     </View>
   );
