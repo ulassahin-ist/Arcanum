@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--
+  Runs inside a hidden RN WebView (see RarExtractorBridge.jsx). Uses
+  node-unrar-js — the official unrar C++ source compiled to WASM via
+  Emscripten — so RAR/CBR extraction has zero dependency on RN's native
+  module system. Ship this alongside unrar.js / unrar.wasm from
+  node_modules/node-unrar-js/esm/js/ (same treatment as epub-reader.html
+  bundles epub.js), copied into:
+    android/app/src/main/assets/  (Android)
+    ios/<project>/  and added to the Xcode bundle resources  (iOS)
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <script src="./unrar.js"></script>
+    <script>
+      function b64ToBytes(b64) {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes;
+      }
+      function bytesToB64(bytes) {
+        let bin = '';
+        const chunk = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunk) {
+          bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+        }
+        return btoa(bin);
+      }
+      function post(msg) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+      }
+
+      document.addEventListener('message', onMessage); // Android
+      window.addEventListener('message', onMessage); // iOS
+
+      async function onMessage(event) {
+        let req;
+        try {
+          req = JSON.parse(event.data);
+        } catch {
+          return;
+        }
+        if (req.type !== 'extract') return;
+
+        try {
+          const data = b64ToBytes(req.dataBase64).buffer;
+          const extractor = await window.unrar.createExtractorFromData({
+            data,
+          });
+          const list = extractor.getFileList();
+          const fileHeaders = [...list.fileHeaders].filter(
+            h => !h.flags.directory,
+          );
+          const names = fileHeaders.map(h => h.name);
+          const extracted = extractor.extract({ files: names });
+          const entries = [...extracted.files].map(f => ({
+            name: f.fileHeader.name,
+            base64: bytesToB64(f.extraction),
+          }));
+          post({ type: 'extract-result', jobId: req.jobId, entries });
+        } catch (e) {
+          post({ type: 'extract-error', jobId: req.jobId, error: String(e) });
+        }
+      }
+    </script>
+  </body>
+</html>

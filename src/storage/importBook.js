@@ -3,16 +3,16 @@ import RNFS from 'react-native-fs';
 import PdfThumbnail from 'react-native-pdf-thumbnail';
 import { addBook } from './library';
 import { extractEpubMetadata } from './epubMetadata';
-import { extractCbzCover, classifyComicArchive } from './cbz';
+import { ensureComicPagesExtracted, NotAComicError } from './comicArchive';
 
 const EXT_TO_FILE_TYPE = {
   epub: 'epub',
   pdf: 'pdf',
   cbz: 'cbz',
   txt: 'txt',
-  // .zip and .rar are ambiguous by extension alone -- they're only
-  // treated as comics once classifyComicArchive confirms the contents
-  // are actually page images (see importBookFromDevice below).
+  // .zip and .rar aren't guaranteed to be comics just because of their
+  // extension -- ensureComicPagesExtracted rejects the import below if
+  // the contents turn out not to be predominantly page images.
   zip: 'cbz',
   rar: 'cbz',
   cbr: 'cbz',
@@ -45,10 +45,16 @@ export async function importBookFromDevice() {
       'application/epub+zip',
       'application/vnd.comicbook+zip',
       'application/x-cbz',
+      // .cbr/.rar — mime type varies a lot by document provider
+      'application/vnd.comicbook-rar',
+      'application/x-cbr',
+      'application/x-rar-compressed',
+      'application/vnd.rar',
+      'application/x-rar',
     ],
   });
 
-  const fileType = detectFileType(result.name);
+  const { fileType, archiveFormat } = detectFileType(result.name);
   if (!fileType) {
     // The picker's type filter is a hint, not a guarantee (some Android
     // document providers ignore it) — bail out cleanly on anything we
@@ -93,19 +99,29 @@ export async function importBookFromDevice() {
       // keep filename/'Unknown' fallback
     }
   } else if (fileType === 'cbz') {
+    book.archiveFormat = archiveFormat; // 'zip' or 'rar' — needed again if the reader cache ever gets evicted
     try {
-      const coverDir = `${RNFS.DocumentDirectoryPath}/covers`;
-      await RNFS.mkdir(coverDir).catch(() => {});
-      const coverDest = `${coverDir}/${book.id}.jpg`;
-      const { coverUri, pageCount, author } = await extractCbzCover(
+      // Extracting pages now (rather than lazily in the reader) does
+      // double duty: it's also the classification check that confirms
+      // this .zip/.rar is actually a comic, and the first page becomes
+      // the cover for free — no separate thumbnail pass needed.
+      const { pageUris, pageCount, author } = await ensureComicPagesExtracted(
         destPath,
-        coverDest,
+        book.id,
+        archiveFormat,
       );
-      book.coverUri = coverUri;
+      book.coverUri = pageUris[0] || null;
       book.pageCount = pageCount;
       if (author) book.author = author;
     } catch (e) {
-      // leave cover/author at defaults; reader still unpacks pages lazily
+      if (e instanceof NotAComicError) {
+        // Not actually a comic (e.g. a renamed .zip full of unrelated
+        // files) — don't leave a broken, unopenable book in the library.
+        await RNFS.unlink(destPath).catch(() => {});
+        throw e;
+      }
+      // Some other extraction hiccup: keep the book, just without a
+      // cover/author; the reader will retry extraction when opened.
     }
     book.coverChecked = true; // one-shot, like pdf — no WebView retry pass
   } else if (fileType === 'txt') {

@@ -19,6 +19,7 @@
     "@sayem314/react-native-keep-awake": "^2.0.0",
     "epubjs": "^0.3.93",
     "lucide-react-native": "^1.22.0",
+    "node-unrar-js": "^2.0.2",
     "react": "19.2.3",
     "react-native": "0.86.0",
     "react-native-blob-util": "^0.24.10",

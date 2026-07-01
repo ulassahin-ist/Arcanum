@@ -88,12 +88,6 @@ export default function RootNavigator() {
     <View
       style={{
         flex: 1,
-        // Horizontal only: on landscape/notched devices this keeps content
-        // clear of the sensor housing/rounded corners on either edge.
-        // Top/bottom are intentionally NOT applied here — ReaderScreen and
-        // SettingsScreen already add insets.top/insets.bottom themselves,
-        // and Tabs' tabBarStyle now reserves its own bottom inset. Padding
-        // vertically here as well used to double-count those insets.
         paddingLeft: insets.left,
         paddingRight: insets.right,
         backgroundColor: colors.bg,

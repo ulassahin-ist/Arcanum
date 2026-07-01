@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
 import { StorageKeys } from './asyncStorage';
+import {
+  getComicCacheBytes,
+  clearComicPagesCache as clearComicPagesCacheDir,
+} from './comicArchive';
 
 export async function getLibrary() {
   const raw = await AsyncStorage.getItem(StorageKeys.LIBRARY);
@@ -25,6 +29,9 @@ export async function removeBook(id) {
   await saveLibrary(updated);
   if (target?.fileUri) {
     RNFS.unlink(target.fileUri).catch(() => {});
+  }
+  if (target?.fileType === 'cbz') {
+    RNFS.unlink(`${RNFS.CachesDirectoryPath}/comics/${id}`).catch(() => {});
   }
   return updated;
 }
@@ -76,15 +83,23 @@ export async function toggleFavorite(id) {
   return updated;
 }
 
-// Reports on-disk size of imported books and extracted covers, in bytes.
+// Reports on-disk size of imported books, extracted covers, and
+// extracted comic pages, in bytes. The comic cache used to be invisible
+// here — it's the biggest contributor for anyone with a comics backlog.
 export async function getStorageInfo() {
   const booksDir = `${RNFS.DocumentDirectoryPath}/books`;
   const coversDir = `${RNFS.DocumentDirectoryPath}/covers`;
-  const [booksBytes, coversBytes] = await Promise.all([
+  const [booksBytes, coversBytes, comicCacheBytes] = await Promise.all([
     dirSize(booksDir),
     dirSize(coversDir),
+    getComicCacheBytes(),
   ]);
-  return { booksBytes, coversBytes, totalBytes: booksBytes + coversBytes };
+  return {
+    booksBytes,
+    coversBytes,
+    comicCacheBytes,
+    totalBytes: booksBytes + coversBytes + comicCacheBytes,
+  };
 }
 
 async function dirSize(path) {
@@ -109,6 +124,23 @@ export async function clearCoverCache() {
   const lib = await getLibrary();
   const updated = lib.map(b =>
     b.fileType === 'epub' ? { ...b, coverUri: null, coverChecked: false } : b,
+  );
+  await saveLibrary(updated);
+  return updated;
+}
+
+// Wipes the extracted comic-pages cache (previously invisible/uncapped —
+// see comicArchive.js). Unlike clearCoverCache, this also has to reset
+// cbz book cover state: a cbz's cover is its first extracted page, so
+// once the cache dir is gone that file:// URI is dangling. Marking
+// coverChecked: false lets LibraryScreen's pending-cover pass notice and
+// re-extract it (and the page cache along with it) next time it's shown.
+export async function clearComicCache() {
+  await clearComicPagesCacheDir();
+
+  const lib = await getLibrary();
+  const updated = lib.map(b =>
+    b.fileType === 'cbz' ? { ...b, coverUri: null, coverChecked: false } : b,
   );
   await saveLibrary(updated);
   return updated;

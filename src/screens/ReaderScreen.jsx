@@ -183,6 +183,7 @@ export default function ReaderScreen({ route, navigation }) {
           ref={readerRef}
           uri={book.fileUri}
           bookId={book.id}
+          archiveFormat={book.archiveFormat}
           initialPage={book.page}
           onProgress={handleProgress}
           onToggleChrome={() => setChrome(v => !v)}

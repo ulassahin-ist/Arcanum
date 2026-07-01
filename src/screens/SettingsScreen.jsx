@@ -27,7 +27,11 @@ import ToggleRow from '../components/ToggleRow';
 import ReaderFontPreview from '../components/ReaderFontPreview';
 import ThemeContrastPreview from '../components/ThemeContrastPreview';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { getStorageInfo, clearCoverCache } from '../storage/library';
+import {
+  getStorageInfo,
+  clearCoverCache,
+  clearComicCache,
+} from '../storage/library';
 
 const READER_FONT_OPTIONS = READER_FONTS.map(f => ({
   key: f.key,
@@ -95,6 +99,8 @@ export default function SettingsScreen() {
 
   const [storageInfo, setStorageInfo] = useState(null);
   const [clearConfirmVisible, setClearConfirmVisible] = useState(false);
+  const [clearComicConfirmVisible, setClearComicConfirmVisible] =
+    useState(false);
 
   const loadStorageInfo = useCallback(() => {
     getStorageInfo().then(setStorageInfo);
@@ -109,6 +115,12 @@ export default function SettingsScreen() {
   async function handleConfirmClear() {
     setClearConfirmVisible(false);
     await clearCoverCache();
+    loadStorageInfo();
+  }
+
+  async function handleConfirmClearComics() {
+    setClearComicConfirmVisible(false);
+    await clearComicCache();
     loadStorageInfo();
   }
 
@@ -277,6 +289,30 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
+      <View style={styles.storageRow}>
+        <View style={styles.titleRow}>
+          <HardDrive size={15} color={colors.textMuted} />
+          <View>
+            <Text style={styles.storageTitle}>Extracted comic pages</Text>
+            <Text style={styles.storageSub}>
+              {storageInfo
+                ? `${formatBytes(
+                    storageInfo.comicCacheBytes,
+                  )} \u00b7 capped at 800 MB, auto-trimmed`
+                : 'Calculating\u2026'}
+            </Text>
+          </View>
+        </View>
+        <Pressable
+          style={styles.clearBtn}
+          onPress={() => setClearComicConfirmVisible(true)}
+          hitSlop={8}
+        >
+          <Trash2 size={13} color={colors.danger} />
+          <Text style={styles.clearBtnLabel}>Clear cache</Text>
+        </Pressable>
+      </View>
+
       <ConfirmDialog
         visible={clearConfirmVisible}
         title="Clear cover cache?"
@@ -286,6 +322,17 @@ export default function SettingsScreen() {
         destructive
         onConfirm={handleConfirmClear}
         onCancel={() => setClearConfirmVisible(false)}
+      />
+
+      <ConfirmDialog
+        visible={clearComicConfirmVisible}
+        title="Clear extracted comic pages?"
+        message="CBZ/CBR pages are re-extracted automatically the next time each comic is opened. Your comic files themselves aren't affected, but this cache normally trims itself automatically \u2014 clear it manually only if you need the space back right now."
+        confirmLabel="Clear"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={handleConfirmClearComics}
+        onCancel={() => setClearComicConfirmVisible(false)}
       />
     </ScrollView>
   );

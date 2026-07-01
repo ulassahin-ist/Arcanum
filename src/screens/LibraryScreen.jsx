@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -28,6 +28,7 @@ import {
   sortBooks,
 } from '../storage/library';
 import { importBookFromDevice } from '../storage/importBook';
+import { ensureComicPagesExtracted } from '../storage/comicArchive';
 import { Plus } from 'lucide-react-native';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -54,8 +55,17 @@ export default function LibraryScreen({ navigation, route }) {
     book: null,
   });
   function findPendingCover(lib) {
+    // epub covers go through the WebView-based EpubCoverExtractor below.
+    // cbz covers can end up in this same "needs a cover" state after
+    // clearComicCache() wipes the extracted-pages cache (a cbz's cover
+    // is just its first page, so it's dangling once that cache is gone)
+    // — handled directly via handleCbzCoverExtraction instead of a
+    // WebView pass, since cbz doesn't need one.
     return lib.find(
-      b => b.fileType === 'epub' && !b.coverUri && !b.coverChecked,
+      b =>
+        (b.fileType === 'epub' || b.fileType === 'cbz') &&
+        !b.coverUri &&
+        !b.coverChecked,
     );
   }
 
@@ -80,6 +90,26 @@ export default function LibraryScreen({ navigation, route }) {
       };
     }, [librarySortOrder, onlyFavorites]),
   );
+
+  // cbz books don't need the WebView pass epub uses — extraction (and
+  // therefore the cover, which is just page 0) can be requested directly.
+  useEffect(() => {
+    if (!pendingCover || pendingCover.fileType !== 'cbz') return;
+    let active = true;
+    const book = pendingCover;
+    ensureComicPagesExtracted(book.fileUri, book.id, book.archiveFormat)
+      .then(({ pageUris }) => updateCover(book.id, pageUris[0] || null))
+      .catch(() => updateCover(book.id, null)) // mark checked either way — falls back to initials rather than retrying forever
+      .finally(async () => {
+        if (!active) return;
+        const lib = await getLibrary();
+        setBooks(visibleBooks(lib));
+        setPendingCover(findPendingCover(lib));
+      });
+    return () => {
+      active = false;
+    };
+  }, [pendingCover?.id]);
 
   async function handleCoverResult(base64) {
     const book = pendingCover;
@@ -223,7 +253,7 @@ export default function LibraryScreen({ navigation, route }) {
         </Pressable>
       )}
 
-      {pendingCover && (
+      {pendingCover && pendingCover.fileType === 'epub' && (
         <EpubCoverExtractor
           uri={pendingCover.fileUri}
           onResult={handleCoverResult}
