@@ -26,6 +26,7 @@ export default function ReaderScreen({ route, navigation }) {
   const [chrome, setChrome] = useState(true);
   const [progress, setProgress] = useState(book.progress || 0);
   const [bookmarks, setBookmarks] = useState(book.bookmarks || []);
+  const [isCurrentBookmarked, setIsCurrentBookmarked] = useState(false);
   const [bookmarkMenu, setBookmarkMenu] = useState({
     visible: false,
     anchor: null,
@@ -40,20 +41,19 @@ export default function ReaderScreen({ route, navigation }) {
   const locationRef = useRef(
     book.fileType === 'pdf' ? book.page : book.progressCfi,
   );
-
   const handleProgress = useCallback(
     (p, extra) => {
       setProgress(p);
       locationRef.current = extra;
+      setIsCurrentBookmarked(!!findBookmarkAt(extra, p));
       if (book.fileType === 'pdf') {
         updateProgress(book.id, p, { page: extra });
       } else {
         updateProgress(book.id, p, { progressCfi: extra });
       }
     },
-    [book.id, book.fileType],
+    [book.id, book.fileType, bookmarks],
   );
-
   function seekToPercent(percent) {
     const clamped = Math.min(Math.max(percent, 0), 1);
     readerRef.current?.seekTo({ percent: clamped });
@@ -76,20 +76,27 @@ export default function ReaderScreen({ route, navigation }) {
       page: bookmark.page,
     });
     setProgress(bookmark.percent);
+    setIsCurrentBookmarked(true);
   }
 
-  function findBookmarkAt(location) {
+  const SAME_LOCATION_EPSILON = 0.0015;
+
+  function findBookmarkAt(location, percent) {
     if (location == null) return null;
-    return bookmarks.find(bm =>
-      book.fileType === 'pdf' ? bm.page === location : bm.cfi === location,
+    if (book.fileType === 'pdf') {
+      return bookmarks.find(bm => bm.page === location);
+    }
+    return bookmarks.find(
+      bm =>
+        bm.cfi === location ||
+        Math.abs(bm.percent - percent) < SAME_LOCATION_EPSILON,
     );
   }
-
   async function handleToggleBookmark() {
     const current = locationRef.current;
     if (current == null) return;
 
-    const existing = findBookmarkAt(current);
+    const existing = findBookmarkAt(current, progress);
     if (existing) {
       await handleRemoveBookmark(existing);
       return;
@@ -102,6 +109,7 @@ export default function ReaderScreen({ route, navigation }) {
       ...(book.fileType === 'pdf' ? { page: current } : { cfi: current }),
     };
     setBookmarks(prev => [...prev, bookmark]);
+    setIsCurrentBookmarked(true);
     await addBookmark(book.id, bookmark);
   }
 
@@ -120,10 +128,11 @@ export default function ReaderScreen({ route, navigation }) {
 
   async function handleRemoveBookmark(bookmark) {
     setBookmarks(prev => prev.filter(bm => bm.id !== bookmark.id));
+    const current = findBookmarkAt(locationRef.current, progress);
+    if (current?.id === bookmark.id) setIsCurrentBookmarked(false);
     await removeBookmark(book.id, bookmark.id);
   }
 
-  const isCurrentBookmarked = !!findBookmarkAt(locationRef.current);
   return (
     <View style={styles.root}>
       {book.fileType === 'pdf' ? (
