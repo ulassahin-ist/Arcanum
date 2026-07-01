@@ -54,14 +54,15 @@
         });
       }
 
-      function loadBook(arrayBuffer, startCfi) {
+      function loadBook(arrayBuffer, startCfi, flow, direction) {
         book = ePub(arrayBuffer);
         rendition = book.renderTo('viewer', {
           width: window.innerWidth,
           height: window.innerHeight,
-          flow: 'paginated',
+          flow: flow === 'scrolled' ? 'scrolled-doc' : 'paginated',
           spread: 'none',
         });
+        if (direction === 'rtl') rendition.direction('rtl');
         rendition.display(startCfi || undefined);
 
         window.addEventListener('resize', () => {
@@ -93,11 +94,14 @@
             }
           });
 
-        attachSwipeHandlers(rendition);
+        attachSwipeHandlers(rendition, flow);
       }
 
       // --- swipe-to-turn-page, tap-to-toggle-chrome ---
-      function attachSwipeHandlers(rendition) {
+      // In scrolled mode the browser's native scrolling already turns
+      // pages, so swipe-to-turn is skipped there — only tap-to-toggle
+      // stays active.
+      function attachSwipeHandlers(rendition, flow) {
         const SWIPE_THRESHOLD = 40; // px, minimum horizontal movement to count as a swipe
         const TAP_SLOP = 10; // px, max movement still considered a "tap"
 
@@ -128,8 +132,8 @@
           const absDy = Math.abs(dy);
 
           // Horizontal swipe: turn page. Ignore if mostly vertical
-          // (accidental scroll/drag).
-          if (absDx > SWIPE_THRESHOLD && absDx > absDy) {
+          // (accidental scroll/drag). Not used in scrolled mode.
+          if (flow !== 'scrolled' && absDx > SWIPE_THRESHOLD && absDx > absDy) {
             lastActionTime = now;
             if (dx < 0) {
               nextPage();
@@ -200,9 +204,11 @@
         if (msg.type === 'next') nextPage();
         if (msg.type === 'prev') prevPage();
         if (msg.type === 'theme' && rendition) {
-          rendition.themes.register('app', {
-            body: { background: msg.payload.bg, color: msg.payload.text },
-          });
+          const body = { background: msg.payload.bg, color: msg.payload.text };
+          if (msg.payload.fontFamily) {
+            body['font-family'] = msg.payload.fontFamily + ' !important';
+          }
+          rendition.themes.register('app', { body });
           rendition.themes.select('app');
           document.body.style.background = msg.payload.bg;
         }
@@ -227,6 +233,8 @@
         const fileUri = params.get('src');
         const startCfi = params.get('cfi') || undefined;
         const mode = params.get('mode') || 'read';
+        const flow = params.get('flow') || 'paginated';
+        const direction = params.get('direction') || 'ltr';
 
         if (!fileUri) {
           console.error('epub-reader.html: missing src param');
@@ -238,7 +246,7 @@
           .then(buffer =>
             mode === 'cover'
               ? extractCover(buffer)
-              : loadBook(buffer, startCfi),
+              : loadBook(buffer, startCfi, flow, direction),
           )
           .catch(err => {
             console.error('epub load error', err);

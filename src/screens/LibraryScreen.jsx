@@ -25,6 +25,7 @@ import {
   updateCover,
   removeBook,
   toggleFavorite,
+  sortBooks,
 } from '../storage/library';
 import { importBookFromDevice } from '../storage/importBook';
 import { Plus } from 'lucide-react-native';
@@ -36,7 +37,7 @@ const CARD_W =
   (SCREEN_W - SPACING.lg * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS;
 
 export default function LibraryScreen({ navigation }) {
-  const { colors } = useTheme();
+  const { colors, librarySortOrder } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors);
   const [view, setView] = useState('grid');
@@ -62,13 +63,13 @@ export default function LibraryScreen({ navigation }) {
       let active = true;
       getLibrary().then(lib => {
         if (!active) return;
-        setBooks(lib);
+        setBooks(sortBooks(lib, librarySortOrder));
         setPendingCover(findPendingCover(lib));
       });
       return () => {
         active = false;
       };
-    }, []),
+    }, [librarySortOrder]),
   );
 
   async function handleCoverResult(base64) {
@@ -91,14 +92,14 @@ export default function LibraryScreen({ navigation }) {
 
     await updateCover(book.id, coverUri);
     const lib = await getLibrary();
-    setBooks(lib);
+    setBooks(sortBooks(lib, librarySortOrder));
     setPendingCover(findPendingCover(lib));
   }
 
   async function handleImport() {
     await importBookFromDevice();
     const lib = await getLibrary();
-    setBooks(lib);
+    setBooks(sortBooks(lib, librarySortOrder));
     if (!pendingCover) setPendingCover(findPendingCover(lib));
   }
 
@@ -117,7 +118,7 @@ export default function LibraryScreen({ navigation }) {
 
   async function handleToggleFavorite(book) {
     await toggleFavorite(book.id);
-    setBooks(await getLibrary());
+    setBooks(sortBooks(await getLibrary(), librarySortOrder));
   }
 
   function handleDeleteRequest(book) {
@@ -305,5 +306,10 @@ const getStyles = colors =>
       ...SHADOW_SM,
       shadowColor: colors.primary,
     },
-    fabTxt: { color: colors.onAccent, fontSize: 28, fontWeight: '300', marginTop: -2 },
+    fabTxt: {
+      color: colors.onAccent,
+      fontSize: 28,
+      fontWeight: '300',
+      marginTop: -2,
+    },
   });
