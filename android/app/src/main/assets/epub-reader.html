@@ -69,9 +69,8 @@
         });
 
         rendition.on('relocated', location => {
-          const pct = book.locations.length()
-            ? book.locations.percentageFromCfi(location.start.cfi)
-            : 0;
+          if (!locationsReady) return;
+          const pct = book.locations.percentageFromCfi(location.start.cfi);
           post('progress', { percent: pct, cfi: location.start.cfi });
         });
 
@@ -82,6 +81,11 @@
           .then(() => {
             locationsReady = true;
             post('locationsReady', {});
+            const current = rendition.currentLocation();
+            if (current && current.start) {
+              const pct = book.locations.percentageFromCfi(current.start.cfi);
+              post('progress', { percent: pct, cfi: current.start.cfi });
+            }
             if (pendingSeekPercent != null) {
               const cfi = book.locations.cfiFromPercentage(pendingSeekPercent);
               pendingSeekPercent = null;

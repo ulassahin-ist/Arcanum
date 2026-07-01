@@ -27,7 +27,7 @@ export default function BookCardGrid({ book, onPress, onLongPress, width }) {
         )}
         {book.favorite && (
           <View style={styles.favoriteBadge}>
-            <Star size={12} color="#fff" fill="#fff" />
+            <Star size={12} color={colors.onAccent} fill={colors.onAccent} />
           </View>
         )}
         {book.progress > 0 && (

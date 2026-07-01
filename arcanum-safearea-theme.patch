@@ -1,0 +1,196 @@
+diff --git a/src/components/BookCardGrid.jsx b/src/components/BookCardGrid.jsx
+index 336c7f9..97fb20e 100644
+--- a/src/components/BookCardGrid.jsx
++++ b/src/components/BookCardGrid.jsx
+@@ -27,7 +27,7 @@ export default function BookCardGrid({ book, onPress, onLongPress, width }) {
+         )}
+         {book.favorite && (
+           <View style={styles.favoriteBadge}>
+-            <Star size={12} color="#fff" fill="#fff" />
++            <Star size={12} color={colors.onAccent} fill={colors.onAccent} />
+           </View>
+         )}
+         {book.progress > 0 && (
+diff --git a/src/navigation/RootNavigator.jsx b/src/navigation/RootNavigator.jsx
+index a294f84..5fe21da 100644
+--- a/src/navigation/RootNavigator.jsx
++++ b/src/navigation/RootNavigator.jsx
+@@ -16,6 +16,7 @@ const Stack = createNativeStackNavigator();
+ 
+ function Tabs() {
+   const { colors } = useTheme();
++  const insets = useSafeAreaInsets();
+   return (
+     <Tab.Navigator
+       screenOptions={{
+@@ -26,8 +27,9 @@ function Tabs() {
+         tabBarStyle: {
+           backgroundColor: colors.card,
+           borderTopColor: colors.border,
+-          height: 52,
++          height: 52 + insets.bottom,
+           paddingTop: 8,
++          paddingBottom: insets.bottom,
+         },
+         tabBarLabelStyle: {
+           fontSize: 11,
+@@ -65,8 +67,14 @@ export default function RootNavigator() {
+     <View
+       style={{
+         flex: 1,
+-        paddingTop: insets.top,
+-        paddingBottom: insets.bottom,
++        // Horizontal only: on landscape/notched devices this keeps content
++        // clear of the sensor housing/rounded corners on either edge.
++        // Top/bottom are intentionally NOT applied here — ReaderScreen and
++        // SettingsScreen already add insets.top/insets.bottom themselves,
++        // and Tabs' tabBarStyle now reserves its own bottom inset. Padding
++        // vertically here as well used to double-count those insets.
++        paddingLeft: insets.left,
++        paddingRight: insets.right,
+         backgroundColor: colors.bg,
+       }}
+     >
+diff --git a/src/screens/LibraryScreen.jsx b/src/screens/LibraryScreen.jsx
+index 4448b81..aab936c 100644
+--- a/src/screens/LibraryScreen.jsx
++++ b/src/screens/LibraryScreen.jsx
+@@ -10,6 +10,7 @@ import {
+ import { useFocusEffect } from '@react-navigation/native';
+ import Animated, { FadeIn } from 'react-native-reanimated';
+ import RNFS from 'react-native-fs';
++import { useSafeAreaInsets } from 'react-native-safe-area-context';
+ import { useTheme } from '../theme/ThemeContext';
+ import { SPACING } from '../theme/spacing';
+ import { SHADOW_SM } from '../theme/shadows';
+@@ -36,6 +37,7 @@ const CARD_W =
+ 
+ export default function LibraryScreen({ navigation }) {
+   const { colors } = useTheme();
++  const insets = useSafeAreaInsets();
+   const styles = getStyles(colors);
+   const [view, setView] = useState('grid');
+   const [books, setBooks] = useState([]);
+@@ -142,7 +144,7 @@ export default function LibraryScreen({ navigation }) {
+     });
+   }
+   return (
+-    <View style={styles.root}>
++    <View style={[styles.root, { paddingTop: insets.top }]}>
+       <View style={styles.topBar}>
+         <Text style={styles.heading}>Library</Text>
+         <ViewToggle value={view} onChange={setView} />
+@@ -198,7 +200,7 @@ export default function LibraryScreen({ navigation }) {
+       )}
+ 
+       <Pressable style={styles.fab} onPress={handleImport}>
+-        <Plus size={28} color="#fff" />
++        <Plus size={28} color={colors.onAccent} />
+       </Pressable>
+ 
+       {pendingCover && (
+@@ -289,7 +291,7 @@ const getStyles = colors =>
+       paddingVertical: 12,
+       borderRadius: 12,
+     },
+-    importBtnTxt: { color: '#fff', fontWeight: '700', fontSize: 14 },
++    importBtnTxt: { color: colors.onAccent, fontWeight: '700', fontSize: 14 },
+     fab: {
+       position: 'absolute',
+       bottom: 24,
+@@ -303,5 +305,5 @@ const getStyles = colors =>
+       ...SHADOW_SM,
+       shadowColor: colors.blue,
+     },
+-    fabTxt: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
++    fabTxt: { color: colors.onAccent, fontSize: 28, fontWeight: '300', marginTop: -2 },
+   });
+diff --git a/src/theme/colors.js b/src/theme/colors.js
+deleted file mode 100644
+index 229579b..0000000
+--- a/src/theme/colors.js
++++ /dev/null
+@@ -1,23 +0,0 @@
+-export const C = {
+-  bg: '#F4F5F7',
+-  card: '#FFFFFF',
+-  border: '#E8E9ED',
+-
+-  text: '#1A1B1E',
+-  textSub: '#4A4D54',
+-  textMuted: '#9A9DA6',
+-
+-  blue: '#3B82F6',
+-
+-  green: '#16A34A',
+-  greenBg: '#E9F9EE',
+-  greenBorder: '#BCEBC9',
+-
+-  amber: '#D97706',
+-  amberBg: '#FEF3DD',
+-  amberBorder: '#FBE3B0',
+-
+-  red: '#DC2626',
+-  redBg: '#FDECEC',
+-  redBorder: '#F6C3C3',
+-};
+diff --git a/src/theme/themes.js b/src/theme/themes.js
+index a9096ff..77d644d 100644
+--- a/src/theme/themes.js
++++ b/src/theme/themes.js
+@@ -18,6 +18,7 @@ export const THEMES = {
+     redBorder: '#F6C3C3',
+     readerBg: '#FFFFFF',
+     readerText: '#1A1B1E',
++    onAccent: '#FFFFFF', // text/icons drawn on top of colors.blue or other filled accents
+   },
+   dark: {
+     bg: '#121316', // Slightly darker for better layout contrast
+@@ -38,6 +39,7 @@ export const THEMES = {
+     redBorder: '#541B1B',
+     readerBg: '#1A1B1F',
+     readerText: '#E5E7EB',
++    onAccent: '#FFFFFF',
+   },
+   vignette: {
+     bg: '#EFE6D8',
+@@ -58,6 +60,7 @@ export const THEMES = {
+     redBorder: '#DDB3A4',
+     readerBg: '#F4ECD8', // Warm eye-friendly paper tone
+     readerText: '#2C2217',
++    onAccent: '#FFFFFF',
+   },
+   candy: {
+     bg: '#FFF0F5',
+@@ -78,6 +81,7 @@ export const THEMES = {
+     redBorder: '#FECDD3',
+     readerBg: '#FFF9FB', // Soft pinkish white to prevent glare
+     readerText: '#2D1227',
++    onAccent: '#FFFFFF',
+   },
+   nordic: {
+     bg: '#E5E9F0',
+@@ -98,6 +102,7 @@ export const THEMES = {
+     redBorder: '#E6C1C5',
+     readerBg: '#F8FAFC',
+     readerText: '#2E3440',
++    onAccent: '#FFFFFF',
+   },
+   oled: {
+     bg: '#000000',
+@@ -118,6 +123,7 @@ export const THEMES = {
+     redBorder: '#471515',
+     readerBg: '#000000',
+     readerText: '#E4E4E7', // Pure white on pure black can glow too much, slightly muted
++    onAccent: '#FFFFFF',
+   },
+   forest: {
+     bg: '#141E19',
+@@ -138,6 +144,7 @@ export const THEMES = {
+     redBorder: '#61242B',
+     readerBg: '#17221C',
+     readerText: '#E1E9E5',
++    onAccent: '#FFFFFF',
+   },
+ };
+ 

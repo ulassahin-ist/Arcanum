@@ -16,6 +16,7 @@ const Stack = createNativeStackNavigator();
 
 function Tabs() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -26,8 +27,9 @@ function Tabs() {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: 52,
+          height: 52 + insets.bottom,
           paddingTop: 8,
+          paddingBottom: insets.bottom,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -65,8 +67,14 @@ export default function RootNavigator() {
     <View
       style={{
         flex: 1,
-        paddingTop: insets.top,
-        paddingBottom: insets.bottom,
+        // Horizontal only: on landscape/notched devices this keeps content
+        // clear of the sensor housing/rounded corners on either edge.
+        // Top/bottom are intentionally NOT applied here — ReaderScreen and
+        // SettingsScreen already add insets.top/insets.bottom themselves,
+        // and Tabs' tabBarStyle now reserves its own bottom inset. Padding
+        // vertically here as well used to double-count those insets.
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
         backgroundColor: colors.bg,
       }}
     >

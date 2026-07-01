@@ -18,6 +18,7 @@ export const THEMES = {
     redBorder: '#F6C3C3',
     readerBg: '#FFFFFF',
     readerText: '#1A1B1E',
+    onAccent: '#FFFFFF', // text/icons drawn on top of colors.blue or other filled accents
   },
   dark: {
     bg: '#121316', // Slightly darker for better layout contrast
@@ -38,6 +39,7 @@ export const THEMES = {
     redBorder: '#541B1B',
     readerBg: '#1A1B1F',
     readerText: '#E5E7EB',
+    onAccent: '#FFFFFF',
   },
   vignette: {
     bg: '#EFE6D8',
@@ -58,6 +60,7 @@ export const THEMES = {
     redBorder: '#DDB3A4',
     readerBg: '#F4ECD8', // Warm eye-friendly paper tone
     readerText: '#2C2217',
+    onAccent: '#FFFFFF',
   },
   candy: {
     bg: '#FFF0F5',
@@ -78,6 +81,7 @@ export const THEMES = {
     redBorder: '#FECDD3',
     readerBg: '#FFF9FB', // Soft pinkish white to prevent glare
     readerText: '#2D1227',
+    onAccent: '#FFFFFF',
   },
   nordic: {
     bg: '#E5E9F0',
@@ -98,6 +102,7 @@ export const THEMES = {
     redBorder: '#E6C1C5',
     readerBg: '#F8FAFC',
     readerText: '#2E3440',
+    onAccent: '#FFFFFF',
   },
   oled: {
     bg: '#000000',
@@ -118,6 +123,7 @@ export const THEMES = {
     redBorder: '#471515',
     readerBg: '#000000',
     readerText: '#E4E4E7', // Pure white on pure black can glow too much, slightly muted
+    onAccent: '#FFFFFF',
   },
   forest: {
     bg: '#141E19',
@@ -138,6 +144,7 @@ export const THEMES = {
     redBorder: '#61242B',
     readerBg: '#17221C',
     readerText: '#E1E9E5',
+    onAccent: '#FFFFFF',
   },
 };
 

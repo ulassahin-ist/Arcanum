@@ -10,6 +10,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import RNFS from 'react-native-fs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { SPACING } from '../theme/spacing';
 import { SHADOW_SM } from '../theme/shadows';
@@ -36,6 +37,7 @@ const CARD_W =
 
 export default function LibraryScreen({ navigation }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = getStyles(colors);
   const [view, setView] = useState('grid');
   const [books, setBooks] = useState([]);
@@ -142,7 +144,7 @@ export default function LibraryScreen({ navigation }) {
     });
   }
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.topBar}>
         <Text style={styles.heading}>Library</Text>
         <ViewToggle value={view} onChange={setView} />
@@ -198,7 +200,7 @@ export default function LibraryScreen({ navigation }) {
       )}
 
       <Pressable style={styles.fab} onPress={handleImport}>
-        <Plus size={28} color="#fff" />
+        <Plus size={28} color={colors.onAccent} />
       </Pressable>
 
       {pendingCover && (
@@ -289,7 +291,7 @@ const getStyles = colors =>
       paddingVertical: 12,
       borderRadius: 12,
     },
-    importBtnTxt: { color: '#fff', fontWeight: '700', fontSize: 14 },
+    importBtnTxt: { color: colors.onAccent, fontWeight: '700', fontSize: 14 },
     fab: {
       position: 'absolute',
       bottom: 24,
@@ -303,5 +305,5 @@ const getStyles = colors =>
       ...SHADOW_SM,
       shadowColor: colors.blue,
     },
-    fabTxt: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
+    fabTxt: { color: colors.onAccent, fontSize: 28, fontWeight: '300', marginTop: -2 },
   });
