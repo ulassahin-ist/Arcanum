@@ -60,7 +60,7 @@ const getStyles = colors => StyleSheet.create({
   coverImg: { width: '100%', height: '100%' },
   fallback: {
     flex: 1,
-    backgroundColor: colors.greenBg,
+    backgroundColor: colors.successBg,
     justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.sm,
@@ -68,7 +68,7 @@ const getStyles = colors => StyleSheet.create({
   fallbackTxt: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.green,
+    color: colors.success,
     textAlign: 'center',
   },
   progressTrack: {
@@ -79,7 +79,7 @@ const getStyles = colors => StyleSheet.create({
     height: 3,
     backgroundColor: 'rgba(0,0,0,0.15)',
   },
-  progressFill: { height: 3, backgroundColor: colors.green },
+  progressFill: { height: 3, backgroundColor: colors.success },
   favoriteBadge: {
     position: 'absolute',
     top: 6,

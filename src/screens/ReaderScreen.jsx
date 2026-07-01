@@ -186,8 +186,8 @@ export default function ReaderScreen({ route, navigation }) {
             >
               <Star
                 size={15}
-                color={colors.amber}
-                fill={isCurrentBookmarked ? colors.amber : 'none'}
+                color={colors.secondary}
+                fill={isCurrentBookmarked ? colors.secondary : 'none'}
               />
             </Pressable>
           </View>
@@ -320,7 +320,7 @@ const getStyles = colors =>
     },
     trackFill: {
       height: 3,
-      backgroundColor: colors.blue,
+      backgroundColor: colors.primary,
     },
     marker: {
       position: 'absolute',
@@ -330,7 +330,7 @@ const getStyles = colors =>
       width: 10,
       height: 10,
       borderRadius: 5,
-      backgroundColor: colors.amber,
+      backgroundColor: colors.secondary,
       borderWidth: 1.5,
       borderColor: colors.card,
     },

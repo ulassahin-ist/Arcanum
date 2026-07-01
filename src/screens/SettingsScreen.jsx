@@ -4,13 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { THEMES, THEME_NAMES } from '../theme/themes';
 
-const LABELS = {
-  light: 'Light',
-  dark: 'Dark',
-  vignette: 'Vignette',
-  candy: 'Candy',
-};
-
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { themeName, colors, setThemeName } = useTheme();
@@ -38,14 +31,16 @@ export default function SettingsScreen() {
                 styles.swatch,
                 {
                   backgroundColor: t.bg,
-                  borderColor: selected ? t.blue : t.border,
+                  borderColor: selected ? t.primary : t.border,
                 },
                 selected && styles.swatchSelected,
               ]}
             >
-              <View style={[styles.swatchDot, { backgroundColor: t.blue }]} />
+              <View
+                style={[styles.swatchDot, { backgroundColor: t.primary }]}
+              />
               <Text style={[styles.swatchLabel, { color: t.text }]}>
-                {name}
+                {t.name}
               </Text>
             </Pressable>
           );

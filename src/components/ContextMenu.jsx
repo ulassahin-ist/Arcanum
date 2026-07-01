@@ -84,5 +84,5 @@ const getStyles = colors =>
     itemBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
     itemPressed: { backgroundColor: colors.bg },
     itemText: { fontSize: 14, fontWeight: '600', color: colors.text },
-    itemTextDestructive: { color: colors.red },
+    itemTextDestructive: { color: colors.danger },
   });

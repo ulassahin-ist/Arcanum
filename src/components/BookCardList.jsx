@@ -32,7 +32,7 @@ export default function BookCardList({ book, onPress, onLongPress }) {
             {book.title}
           </Text>
           {book.favorite && (
-            <Star size={13} color={colors.amber} fill={colors.amber} style={styles.titleStar} />
+            <Star size={13} color={colors.secondary} fill={colors.secondary} style={styles.titleStar} />
           )}
         </View>
         <Text style={styles.author} numberOfLines={1}>
@@ -73,9 +73,9 @@ const getStyles = colors => StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.greenBg,
+    backgroundColor: colors.successBg,
   },
-  fallbackTxt: { fontSize: 14, fontWeight: '800', color: colors.green },
+  fallbackTxt: { fontSize: 14, fontWeight: '800', color: colors.success },
   info: { flex: 1, justifyContent: 'center' },
   titleRow: { flexDirection: 'row', alignItems: 'center' },
   title: { fontSize: 15, fontWeight: '600', color: colors.text, flexShrink: 1 },
@@ -88,6 +88,6 @@ const getStyles = colors => StyleSheet.create({
     marginTop: 8,
     overflow: 'hidden',
   },
-  progressFill: { height: 4, backgroundColor: colors.green, borderRadius: 2 },
+  progressFill: { height: 4, backgroundColor: colors.success, borderRadius: 2 },
   progressTxt: { fontSize: 10, color: colors.textMuted, marginTop: 4 },
 });

@@ -22,7 +22,7 @@ function Tabs() {
       screenOptions={{
         tabBarPressColor: 'transparent',
         headerShown: false,
-        tabBarActiveTintColor: colors.blue,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           backgroundColor: colors.card,

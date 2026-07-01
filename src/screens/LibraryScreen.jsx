@@ -286,7 +286,7 @@ const getStyles = colors =>
       marginBottom: 18,
     },
     importBtn: {
-      backgroundColor: colors.blue,
+      backgroundColor: colors.primary,
       paddingHorizontal: 20,
       paddingVertical: 12,
       borderRadius: 12,
@@ -299,11 +299,11 @@ const getStyles = colors =>
       width: 56,
       height: 56,
       borderRadius: 18,
-      backgroundColor: colors.blue,
+      backgroundColor: colors.primary,
       justifyContent: 'center',
       alignItems: 'center',
       ...SHADOW_SM,
-      shadowColor: colors.blue,
+      shadowColor: colors.primary,
     },
     fabTxt: { color: colors.onAccent, fontSize: 28, fontWeight: '300', marginTop: -2 },
   });

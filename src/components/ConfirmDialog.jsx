@@ -107,5 +107,5 @@ const getStyles = colors =>
     btnPressed: { backgroundColor: colors.bg },
     confirmBtn: {},
     btnLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
-    confirmLabelDestructive: { color: colors.red },
+    confirmLabelDestructive: { color: colors.danger },
   });
