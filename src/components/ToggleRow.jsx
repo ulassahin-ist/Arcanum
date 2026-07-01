@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
+import { Text } from './AppText';
 import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SPACING } from '../theme/spacing';
 

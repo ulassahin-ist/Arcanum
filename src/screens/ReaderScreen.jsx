@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
+import { Text } from '../components/AppText';
 import Animated, {
   FadeInUp,
   FadeOutUp,
@@ -9,7 +10,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import KeepAwake from '@sayem314/react-native-keep-awake';
 import { useTheme } from '../theme/ThemeContext';
-import { getReaderFontFamily } from '../theme/fonts';
+import { getReaderFontFamily, getReaderFontSizeValue } from '../theme/fonts';
 import {
   updateProgress,
   addBookmark,
@@ -17,6 +18,8 @@ import {
 } from '../storage/library';
 import PdfReader from '../components/PdfReader';
 import EpubReader from '../components/EpubReader';
+import CbzReader from '../components/CbzReader';
+import TxtReader from '../components/TxtReader';
 import ContextMenu from '../components/ContextMenu';
 import { ChevronLeft, Star } from 'lucide-react-native';
 
@@ -24,6 +27,7 @@ export default function ReaderScreen({ route, navigation }) {
   const {
     colors,
     readerFont,
+    readerFontSize,
     readingFlow,
     readingDirection,
     keepAwake,
@@ -46,19 +50,27 @@ export default function ReaderScreen({ route, navigation }) {
   const trackWidthRef = useRef(0);
 
   const readerRef = useRef(null);
-  // Latest precise location: epub CFI or pdf page number, used when bookmarking.
+  // Latest precise location, used when bookmarking: epub CFI, pdf/cbz page
+  // number, or null for txt (which only has a scroll percent — see below).
   const locationRef = useRef(
-    book.fileType === 'pdf' ? book.page : book.progressCfi,
+    book.fileType === 'pdf' || book.fileType === 'cbz'
+      ? book.page
+      : book.fileType === 'epub'
+      ? book.progressCfi
+      : null,
   );
   const handleProgress = useCallback(
     (p, extra) => {
       setProgress(p);
       locationRef.current = extra;
       setIsCurrentBookmarked(!!findBookmarkAt(extra, p));
-      if (book.fileType === 'pdf') {
+      if (book.fileType === 'pdf' || book.fileType === 'cbz') {
         updateProgress(book.id, p, { page: extra });
-      } else {
+      } else if (book.fileType === 'epub') {
         updateProgress(book.id, p, { progressCfi: extra });
+      } else {
+        // txt: percent is the only meaningful location, already saved as `p`
+        updateProgress(book.id, p, {});
       }
     },
     [book.id, book.fileType, bookmarks],
@@ -91,14 +103,22 @@ export default function ReaderScreen({ route, navigation }) {
   const SAME_LOCATION_EPSILON = 0.0015;
 
   function findBookmarkAt(location, percent) {
-    if (location == null) return null;
-    if (book.fileType === 'pdf') {
+    if (book.fileType === 'pdf' || book.fileType === 'cbz') {
+      if (location == null) return null;
       return bookmarks.find(bm => bm.page === location);
     }
+    if (book.fileType === 'epub') {
+      if (location == null) return null;
+      return bookmarks.find(
+        bm =>
+          bm.cfi === location ||
+          Math.abs(bm.percent - percent) < SAME_LOCATION_EPSILON,
+      );
+    }
+    // txt: no stable location id (font size changes reflow the scroll
+    // range anyway), so proximity-by-percent is the best we can do.
     return bookmarks.find(
-      bm =>
-        bm.cfi === location ||
-        Math.abs(bm.percent - percent) < SAME_LOCATION_EPSILON,
+      bm => Math.abs(bm.percent - percent) < SAME_LOCATION_EPSILON,
     );
   }
   async function handleToggleBookmark() {
@@ -115,7 +135,11 @@ export default function ReaderScreen({ route, navigation }) {
       id: `${Date.now()}`,
       percent: progress,
       createdAt: Date.now(),
-      ...(book.fileType === 'pdf' ? { page: current } : { cfi: current }),
+      ...(book.fileType === 'pdf' || book.fileType === 'cbz'
+        ? { page: current }
+        : book.fileType === 'epub'
+        ? { cfi: current }
+        : {}),
     };
     setBookmarks(prev => [...prev, bookmark]);
     setIsCurrentBookmarked(true);
@@ -154,6 +178,25 @@ export default function ReaderScreen({ route, navigation }) {
           onProgress={handleProgress}
           onToggleChrome={() => setChrome(v => !v)}
         />
+      ) : book.fileType === 'cbz' ? (
+        <CbzReader
+          ref={readerRef}
+          uri={book.fileUri}
+          bookId={book.id}
+          initialPage={book.page}
+          onProgress={handleProgress}
+          onToggleChrome={() => setChrome(v => !v)}
+        />
+      ) : book.fileType === 'txt' ? (
+        <TxtReader
+          ref={readerRef}
+          uri={book.fileUri}
+          startPercent={book.progress}
+          onProgress={handleProgress}
+          onToggleChrome={() => setChrome(v => !v)}
+          fontFamily={getReaderFontFamily(readerFont)}
+          fontSize={getReaderFontSizeValue(readerFontSize)}
+        />
       ) : (
         <EpubReader
           ref={readerRef}
@@ -162,6 +205,7 @@ export default function ReaderScreen({ route, navigation }) {
           onProgress={handleProgress}
           onToggleChrome={() => setChrome(v => !v)}
           fontFamily={getReaderFontFamily(readerFont)}
+          fontSize={getReaderFontSizeValue(readerFontSize)}
           flow={readingFlow}
           direction={readingDirection}
         />

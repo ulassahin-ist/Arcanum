@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../components/AppText';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -13,7 +14,13 @@ import {
 } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { THEMES, THEME_NAMES } from '../theme/themes';
-import { APP_FONTS, READER_FONTS, resolveAppFontFamily } from '../theme/fonts';
+import {
+  APP_FONTS,
+  READER_FONTS,
+  READER_FONT_SIZES,
+  getReaderFontSizeValue,
+  resolveAppFontFamily,
+} from '../theme/fonts';
 import { RADIUS, SPACING } from '../theme/spacing';
 import PillSelector from '../components/PillSelector';
 import ToggleRow from '../components/ToggleRow';
@@ -23,6 +30,11 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { getStorageInfo, clearCoverCache } from '../storage/library';
 
 const READER_FONT_OPTIONS = READER_FONTS.map(f => ({
+  key: f.key,
+  label: f.label,
+}));
+
+const READER_FONT_SIZE_OPTIONS = READER_FONT_SIZES.map(f => ({
   key: f.key,
   label: f.label,
 }));
@@ -64,6 +76,8 @@ export default function SettingsScreen() {
     setThemeName,
     readerFont,
     setReaderFont,
+    readerFontSize,
+    setReaderFontSize,
     appFont,
     setAppFont,
     librarySortOrder,
@@ -112,6 +126,7 @@ export default function SettingsScreen() {
 
   const readerFontEntry = READER_FONTS.find(f => f.key === readerFont);
   const readerFontFamily = readerFontEntry ? readerFontEntry.family : null;
+  const readerFontSizeValue = getReaderFontSizeValue(readerFontSize);
 
   return (
     <ScrollView
@@ -127,11 +142,19 @@ export default function SettingsScreen() {
         bg={colors.readerBg}
         text={colors.readerText}
         fontFamily={readerFontFamily}
+        fontSize={readerFontSizeValue}
       />
       <PillSelector
         options={READER_FONT_OPTIONS}
         value={readerFont}
         onChange={setReaderFont}
+      />
+
+      <Text style={[styles.subLabel, styles.fontSizeLabel]}>Font Size</Text>
+      <PillSelector
+        options={READER_FONT_SIZE_OPTIONS}
+        value={readerFontSize}
+        onChange={setReaderFontSize}
       />
       <Text style={styles.hint}>Applies to EPUB books only</Text>
 
@@ -318,6 +341,7 @@ const getStyles = colors =>
       marginBottom: 8,
     },
     subLabel: { fontSize: 13, fontWeight: '600', color: colors.text },
+    fontSizeLabel: { marginTop: 14, marginBottom: 8 },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     storageRow: {
       flexDirection: 'row',

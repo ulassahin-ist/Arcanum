@@ -8,9 +8,16 @@ import { WebView } from 'react-native-webview';
 const SAMPLE_TEXT =
   'The lighthouse keeper climbed the spiral stairs one last time, counting each step the way he always had — a hundred and twelve — then the cold sweep of the lamp, and the sea beyond it, endless and patient.';
 
-export default function ReaderFontPreview({ bg, text, fontFamily, height = 118 }) {
+export default function ReaderFontPreview({
+  bg,
+  text,
+  fontFamily,
+  fontSize = 100,
+  height = 118,
+}) {
   const html = useMemo(() => {
     const family = fontFamily || '-apple-system, Roboto, sans-serif';
+    const size = Math.round(15 * (fontSize / 100));
     return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 <style>
   html, body { margin: 0; padding: 0; background: ${bg}; }
@@ -19,12 +26,12 @@ export default function ReaderFontPreview({ bg, text, fontFamily, height = 118 }
     padding: 16px;
     color: ${text};
     font-family: ${family};
-    font-size: 15px;
+    font-size: ${size}px;
     line-height: 1.6;
   }
 </style></head>
 <body><p>${SAMPLE_TEXT}</p></body></html>`;
-  }, [bg, text, fontFamily]);
+  }, [bg, text, fontFamily, fontSize]);
 
   return (
     <View style={[styles.wrap, { height, backgroundColor: bg }]}>

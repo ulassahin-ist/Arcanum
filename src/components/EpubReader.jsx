@@ -5,7 +5,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from './AppText';
 import { WebView } from 'react-native-webview';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -16,6 +17,7 @@ const EpubReader = forwardRef(function EpubReader(
     onProgress,
     onToggleChrome,
     fontFamily,
+    fontSize = 100,
     flow = 'paginated',
     direction = 'ltr',
   },
@@ -43,6 +45,7 @@ const EpubReader = forwardRef(function EpubReader(
           bg: colors.readerBg,
           text: colors.readerText,
           fontFamily: fontFamily || undefined,
+          fontSize,
         },
       }),
     );
@@ -63,7 +66,7 @@ const EpubReader = forwardRef(function EpubReader(
 
   useEffect(() => {
     if (renditionReady) sendTheme();
-  }, [renditionReady, colors.readerBg, colors.readerText, fontFamily]);
+  }, [renditionReady, colors.readerBg, colors.readerText, fontFamily, fontSize]);
 
   const htmlUri = `file:///android_asset/epub-reader.html?src=${encodeURIComponent(
     'file://' + uri,

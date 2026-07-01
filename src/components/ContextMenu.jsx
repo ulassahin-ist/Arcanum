@@ -1,5 +1,6 @@
 import React from 'react';
-import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from './AppText';
 import { useTheme } from '../theme/ThemeContext';
 import { RADIUS } from '../theme/spacing';
 import { SHADOW_MD } from '../theme/shadows';

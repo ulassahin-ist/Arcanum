@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { THEMES } from './themes';
 import { loadSettings, saveSettings } from './storage';
-import { resolveAppFontFamily } from './fonts';
-import { setGlobalFontFamily } from './globalFont';
 
 const DEFAULTS = {
   themeName: 'light',
   readerFont: 'original',
-  appFont: 'system',
+  appFont: 'inter',
+  readerFontSize: 'md',
   librarySortOrder: 'recentlyAdded',
   readingFlow: 'paginated', // 'paginated' | 'scrolled'
   readingDirection: 'ltr', // 'ltr' | 'rtl'
@@ -21,6 +20,7 @@ const ThemeContext = createContext({
   setThemeName: () => {},
   setReaderFont: () => {},
   setAppFont: () => {},
+  setReaderFontSize: () => {},
   setLibrarySortOrder: () => {},
   setReadingFlow: () => {},
   setReadingDirection: () => {},
@@ -37,7 +37,6 @@ export function ThemeProvider({ children }) {
       const merged = { ...DEFAULTS, ...s };
       if (!THEMES[merged.themeName]) merged.themeName = DEFAULTS.themeName;
       setSettings(merged);
-      setGlobalFontFamily(resolveAppFontFamily(merged.appFont));
       setReady(true);
     });
   }, []);
@@ -57,8 +56,11 @@ export function ThemeProvider({ children }) {
   }
 
   async function setAppFont(key) {
-    setGlobalFontFamily(resolveAppFontFamily(key));
     await patch({ appFont: key });
+  }
+
+  async function setReaderFontSize(size) {
+    await patch({ readerFontSize: size });
   }
 
   async function setLibrarySortOrder(order) {
@@ -91,6 +93,7 @@ export function ThemeProvider({ children }) {
         setThemeName,
         setReaderFont,
         setAppFont,
+        setReaderFontSize,
         setLibrarySortOrder,
         setReadingFlow,
         setReadingDirection,

@@ -210,6 +210,9 @@
           }
           rendition.themes.register('app', { body });
           rendition.themes.select('app');
+          if (typeof msg.payload.fontSize === 'number') {
+            rendition.themes.fontSize(msg.payload.fontSize + '%');
+          }
           document.body.style.background = msg.payload.bg;
         }
         if (msg.type === 'seek' && rendition) {

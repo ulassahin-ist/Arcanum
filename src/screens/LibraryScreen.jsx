@@ -4,9 +4,9 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { Text } from '../components/AppText';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import RNFS from 'react-native-fs';
@@ -36,7 +36,8 @@ const GRID_GAP = SPACING.md;
 const CARD_W =
   (SCREEN_W - SPACING.lg * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS;
 
-export default function LibraryScreen({ navigation }) {
+export default function LibraryScreen({ navigation, route }) {
+  const onlyFavorites = !!route?.params?.onlyFavorites;
   const { colors, librarySortOrder } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors);
@@ -58,18 +59,26 @@ export default function LibraryScreen({ navigation }) {
     );
   }
 
+  function visibleBooks(lib) {
+    const base = onlyFavorites ? lib.filter(b => b.favorite) : lib;
+    return sortBooks(base, librarySortOrder);
+  }
+
   useFocusEffect(
     useCallback(() => {
       let active = true;
       getLibrary().then(lib => {
         if (!active) return;
-        setBooks(sortBooks(lib, librarySortOrder));
-        setPendingCover(findPendingCover(lib));
+        setBooks(visibleBooks(lib));
+        // Cover extraction runs off the full library exactly once,
+        // regardless of which tab triggered the focus — no need to
+        // duplicate it on the Favorites tab too.
+        if (!onlyFavorites) setPendingCover(findPendingCover(lib));
       });
       return () => {
         active = false;
       };
-    }, [librarySortOrder]),
+    }, [librarySortOrder, onlyFavorites]),
   );
 
   async function handleCoverResult(base64) {
@@ -92,14 +101,14 @@ export default function LibraryScreen({ navigation }) {
 
     await updateCover(book.id, coverUri);
     const lib = await getLibrary();
-    setBooks(sortBooks(lib, librarySortOrder));
+    setBooks(visibleBooks(lib));
     setPendingCover(findPendingCover(lib));
   }
 
   async function handleImport() {
     await importBookFromDevice();
     const lib = await getLibrary();
-    setBooks(sortBooks(lib, librarySortOrder));
+    setBooks(visibleBooks(lib));
     if (!pendingCover) setPendingCover(findPendingCover(lib));
   }
 
@@ -118,7 +127,7 @@ export default function LibraryScreen({ navigation }) {
 
   async function handleToggleFavorite(book) {
     await toggleFavorite(book.id);
-    setBooks(sortBooks(await getLibrary(), librarySortOrder));
+    setBooks(visibleBooks(await getLibrary()));
   }
 
   function handleDeleteRequest(book) {
@@ -131,7 +140,7 @@ export default function LibraryScreen({ navigation }) {
     if (!confirmDialog.book) return;
 
     await removeBook(confirmDialog.book.id);
-    setBooks(await getLibrary());
+    setBooks(visibleBooks(await getLibrary()));
 
     setConfirmDialog({
       visible: false,
@@ -147,19 +156,27 @@ export default function LibraryScreen({ navigation }) {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.topBar}>
-        <Text style={styles.heading}>Library</Text>
+        <Text style={styles.heading}>
+          {onlyFavorites ? 'Favorites' : 'Library'}
+        </Text>
         <ViewToggle value={view} onChange={setView} />
       </View>
 
       {books.length === 0 ? (
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>No books yet</Text>
-          <Text style={styles.emptySub}>
-            Import an EPUB or PDF to start reading
+          <Text style={styles.emptyTitle}>
+            {onlyFavorites ? 'No favorites yet' : 'No books yet'}
           </Text>
-          <Pressable style={styles.importBtn} onPress={handleImport}>
-            <Text style={styles.importBtnTxt}>Import a book</Text>
-          </Pressable>
+          <Text style={styles.emptySub}>
+            {onlyFavorites
+              ? 'Long-press a book in your library and choose Add to Favorites'
+              : 'Import an EPUB, PDF, CBZ, or TXT to start reading'}
+          </Text>
+          {!onlyFavorites && (
+            <Pressable style={styles.importBtn} onPress={handleImport}>
+              <Text style={styles.importBtnTxt}>Import a book</Text>
+            </Pressable>
+          )}
         </View>
       ) : (
         <Animated.View
@@ -200,9 +217,11 @@ export default function LibraryScreen({ navigation }) {
         </Animated.View>
       )}
 
-      <Pressable style={styles.fab} onPress={handleImport}>
-        <Plus size={28} color={colors.onAccent} />
-      </Pressable>
+      {!onlyFavorites && (
+        <Pressable style={styles.fab} onPress={handleImport}>
+          <Plus size={28} color={colors.onAccent} />
+        </Pressable>
+      )}
 
       {pendingCover && (
         <EpubCoverExtractor

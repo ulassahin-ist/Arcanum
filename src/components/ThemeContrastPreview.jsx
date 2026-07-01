@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from './AppText';
 
 // Small, understated strip of the theme's key colors next to a sample
 // "Aa" — enough to judge contrast at a glance without a huge box.
