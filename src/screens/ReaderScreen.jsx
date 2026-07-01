@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, PanResponder } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import Animated, {
   FadeInUp,
   FadeOutUp,
@@ -31,8 +31,9 @@ export default function ReaderScreen({ route, navigation }) {
     anchor: null,
     bookmark: null,
   });
-  const [scrubPercent, setScrubPercent] = useState(null);
-  const [trackWidth, setTrackWidth] = useState(0);
+  // Ref, not state: read fresh on every tap via onLayout, no closure
+  // staleness concerns since there's no memoized PanResponder involved.
+  const trackWidthRef = useRef(0);
 
   const readerRef = useRef(null);
   // Latest precise location: epub CFI or pdf page number, used when bookmarking.
@@ -54,7 +55,18 @@ export default function ReaderScreen({ route, navigation }) {
   );
 
   function seekToPercent(percent) {
-    readerRef.current?.seekTo({ percent: Math.min(Math.max(percent, 0), 1) });
+    const clamped = Math.min(Math.max(percent, 0), 1);
+    readerRef.current?.seekTo({ percent: clamped });
+    // Optimistically reflect the tap immediately so the fill doesn't wait
+    // on the reader to confirm via its own 'progress' callback (which can
+    // lag, especially for PDFs).
+    setProgress(clamped);
+  }
+
+  function handleTrackPress(e) {
+    const width = trackWidthRef.current;
+    if (!width) return;
+    seekToPercent(e.nativeEvent.locationX / width);
   }
 
   function seekToBookmark(bookmark) {
@@ -63,14 +75,25 @@ export default function ReaderScreen({ route, navigation }) {
       cfi: bookmark.cfi,
       page: bookmark.page,
     });
+    setProgress(bookmark.percent);
   }
 
-  async function handleAddBookmark() {
-    const current = locationRef.current;
-    const alreadyBookmarked = bookmarks.some(bm =>
-      book.fileType === 'pdf' ? bm.page === current : bm.cfi === current,
+  function findBookmarkAt(location) {
+    if (location == null) return null;
+    return bookmarks.find(bm =>
+      book.fileType === 'pdf' ? bm.page === location : bm.cfi === location,
     );
-    if (alreadyBookmarked || current == null) return;
+  }
+
+  async function handleToggleBookmark() {
+    const current = locationRef.current;
+    if (current == null) return;
+
+    const existing = findBookmarkAt(current);
+    if (existing) {
+      await handleRemoveBookmark(existing);
+      return;
+    }
 
     const bookmark = {
       id: `${Date.now()}`,
@@ -100,33 +123,7 @@ export default function ReaderScreen({ route, navigation }) {
     await removeBookmark(book.id, bookmark.id);
   }
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: e => {
-        if (!trackWidth) return;
-        setScrubPercent(
-          Math.min(Math.max(e.nativeEvent.locationX / trackWidth, 0), 1),
-        );
-      },
-      onPanResponderMove: e => {
-        if (!trackWidth) return;
-        setScrubPercent(
-          Math.min(Math.max(e.nativeEvent.locationX / trackWidth, 0), 1),
-        );
-      },
-      onPanResponderRelease: () => {
-        setScrubPercent(current => {
-          if (current != null) seekToPercent(current);
-          return null;
-        });
-      },
-      onPanResponderTerminate: () => setScrubPercent(null),
-    }),
-  ).current;
-
-  const displayPercent = scrubPercent ?? progress;
+  const isCurrentBookmarked = !!findBookmarkAt(locationRef.current);
   return (
     <View style={styles.root}>
       {book.fileType === 'pdf' ? (
@@ -171,30 +168,40 @@ export default function ReaderScreen({ route, navigation }) {
         >
           <View style={styles.bottomLabelRow}>
             <Text style={styles.bottomLabel} numberOfLines={1}>
-              {book.title} · {Math.round(displayPercent * 100)}%
+              {Math.round(progress * 100)}%
             </Text>
             <Pressable
-              onPress={handleAddBookmark}
+              onPress={handleToggleBookmark}
               hitSlop={10}
               style={styles.bookmarkBtn}
             >
-              <Star size={15} color={colors.amber} />
+              <Star
+                size={15}
+                color={colors.amber}
+                fill={isCurrentBookmarked ? colors.amber : 'none'}
+              />
             </Pressable>
           </View>
-          <View
+          {/*
+            Plain tap-to-seek — no PanResponder. Bookmarks are ordinary
+            nested Pressables; since nothing here is negotiating/stealing
+            the responder mid-gesture, RN resolves each tap to whichever
+            view was actually touched (a marker, or the bar itself) on its
+            own, no extra plumbing required.
+          */}
+          <Pressable
             style={styles.trackTouchArea}
-            onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}
-            {...panResponder.panHandlers}
+            onLayout={e => {
+              trackWidthRef.current = e.nativeEvent.layout.width;
+            }}
+            onPress={handleTrackPress}
           >
             <View style={styles.track}>
               <View
                 style={[
                   styles.trackFill,
                   {
-                    width: `${Math.min(
-                      Math.max(displayPercent * 100, 0),
-                      100,
-                    )}%`,
+                    width: `${Math.min(Math.max(progress * 100, 0), 100)}%`,
                   },
                 ]}
               />
@@ -208,7 +215,7 @@ export default function ReaderScreen({ route, navigation }) {
                 style={[styles.marker, { left: `${bm.percent * 100}%` }]}
               />
             ))}
-          </View>
+          </Pressable>
         </Animated.View>
       )}
 
@@ -278,7 +285,7 @@ const getStyles = colors =>
     bottomLabelRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'flex-end',
       marginBottom: 4,
     },
     bottomLabel: {
@@ -286,6 +293,7 @@ const getStyles = colors =>
       fontWeight: '600',
       color: colors.textMuted,
       textAlign: 'center',
+      display: 'none',
     },
     bookmarkBtn: {
       marginLeft: 10,
