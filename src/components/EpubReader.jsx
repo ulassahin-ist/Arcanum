@@ -12,9 +12,12 @@ import { useTheme } from '../theme/ThemeContext';
 const EpubReader = forwardRef(function EpubReader(
   {
     uri,
-    startCfi, // <-- was `initialProgress`, and unused
+    startCfi,
     onProgress,
     onToggleChrome,
+    fontFamily,
+    flow = 'paginated',
+    direction = 'ltr',
   },
   ref,
 ) {
@@ -36,7 +39,11 @@ const EpubReader = forwardRef(function EpubReader(
     webRef.current?.postMessage(
       JSON.stringify({
         type: 'theme',
-        payload: { bg: colors.readerBg, text: colors.readerText },
+        payload: {
+          bg: colors.readerBg,
+          text: colors.readerText,
+          fontFamily: fontFamily || undefined,
+        },
       }),
     );
   }
@@ -54,16 +61,15 @@ const EpubReader = forwardRef(function EpubReader(
     }
   }
 
-  // The book's rendition only exists inside the WebView after it reports
-  // 'ready', and the theme has to be (re)sent any time it's available or
-  // the app theme changes (e.g. user switches theme mid-read).
   useEffect(() => {
     if (renditionReady) sendTheme();
-  }, [renditionReady, colors.readerBg, colors.readerText]);
+  }, [renditionReady, colors.readerBg, colors.readerText, fontFamily]);
 
   const htmlUri = `file:///android_asset/epub-reader.html?src=${encodeURIComponent(
     'file://' + uri,
-  )}${startCfi ? `&cfi=${encodeURIComponent(startCfi)}` : ''}`;
+  )}${
+    startCfi ? `&cfi=${encodeURIComponent(startCfi)}` : ''
+  }&flow=${flow}&direction=${direction}`;
 
   if (loadError) {
     return (
@@ -95,6 +101,7 @@ const EpubReader = forwardRef(function EpubReader(
 
 export default EpubReader;
 
-const getStyles = colors => StyleSheet.create({
-  fill: { flex: 1, backgroundColor: colors.bg },
-});
+const getStyles = colors =>
+  StyleSheet.create({
+    fill: { flex: 1, backgroundColor: colors.bg },
+  });

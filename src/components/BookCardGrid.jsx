@@ -48,53 +48,54 @@ export default function BookCardGrid({ book, onPress, onLongPress, width }) {
   );
 }
 
-const getStyles = colors => StyleSheet.create({
-  wrap: { marginBottom: SPACING.lg },
-  cover: {
-    width: '100%',
-    borderRadius: RADIUS.sm,
-    overflow: 'hidden',
-    backgroundColor: colors.card,
-    ...SHADOW_SM,
-  },
-  coverImg: { width: '100%', height: '100%' },
-  fallback: {
-    flex: 1,
-    backgroundColor: colors.successBg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.sm,
-  },
-  fallbackTxt: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.success,
-    textAlign: 'center',
-  },
-  progressTrack: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: 'rgba(0,0,0,0.15)',
-  },
-  progressFill: { height: 3, backgroundColor: colors.success },
-  favoriteBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-    marginTop: 6,
-  },
-});
+const getStyles = colors =>
+  StyleSheet.create({
+    wrap: { marginBottom: SPACING.lg },
+    cover: {
+      width: '100%',
+      borderRadius: RADIUS.sm,
+      overflow: 'hidden',
+      backgroundColor: colors.card,
+      ...SHADOW_SM,
+    },
+    coverImg: { width: '100%', height: '100%' },
+    fallback: {
+      flex: 1,
+      backgroundColor: colors.successBg,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: SPACING.sm,
+    },
+    fallbackTxt: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.success,
+      textAlign: 'center',
+    },
+    progressTrack: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 3,
+      backgroundColor: 'rgba(0,0,0,0.15)',
+    },
+    progressFill: { height: 3, backgroundColor: colors.success },
+    favoriteBadge: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+      marginTop: 6,
+    },
+  });

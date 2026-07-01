@@ -7,7 +7,9 @@ import Animated, {
   FadeOutDown,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import KeepAwake from '@sayem314/react-native-keep-awake';
 import { useTheme } from '../theme/ThemeContext';
+import { getReaderFontFamily } from '../theme/fonts';
 import {
   updateProgress,
   addBookmark,
@@ -19,7 +21,14 @@ import ContextMenu from '../components/ContextMenu';
 import { ChevronLeft, Star } from 'lucide-react-native';
 
 export default function ReaderScreen({ route, navigation }) {
-  const { colors } = useTheme();
+  const {
+    colors,
+    readerFont,
+    readingFlow,
+    readingDirection,
+    keepAwake,
+    warmLight,
+  } = useTheme();
   const styles = getStyles(colors);
   const insets = useSafeAreaInsets();
   const { book } = route.params;
@@ -135,6 +144,8 @@ export default function ReaderScreen({ route, navigation }) {
 
   return (
     <View style={styles.root}>
+      {keepAwake && <KeepAwake />}
+
       {book.fileType === 'pdf' ? (
         <PdfReader
           ref={readerRef}
@@ -150,8 +161,13 @@ export default function ReaderScreen({ route, navigation }) {
           startCfi={book.progressCfi}
           onProgress={handleProgress}
           onToggleChrome={() => setChrome(v => !v)}
+          fontFamily={getReaderFontFamily(readerFont)}
+          flow={readingFlow}
+          direction={readingDirection}
         />
       )}
+
+      {warmLight && <View pointerEvents="none" style={styles.warmOverlay} />}
 
       {chrome && (
         <Animated.View
@@ -255,6 +271,10 @@ export default function ReaderScreen({ route, navigation }) {
 const getStyles = colors =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.bg },
+    warmOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(255,138,36,0.14)',
+    },
     topBar: {
       position: 'absolute',
       top: 0,
