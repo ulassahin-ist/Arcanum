@@ -3,18 +3,36 @@ import RNFS from 'react-native-fs';
 import PdfThumbnail from 'react-native-pdf-thumbnail';
 import { addBook } from './library';
 import { extractEpubMetadata } from './epubMetadata';
-import { extractCbzCover } from './cbz';
+import { extractCbzCover, classifyComicArchive } from './cbz';
 
 const EXT_TO_FILE_TYPE = {
   epub: 'epub',
   pdf: 'pdf',
   cbz: 'cbz',
   txt: 'txt',
+  // .zip and .rar are ambiguous by extension alone -- they're only
+  // treated as comics once classifyComicArchive confirms the contents
+  // are actually page images (see importBookFromDevice below).
+  zip: 'cbz',
+  rar: 'cbz',
+  cbr: 'cbz',
+};
+
+// zip and rar (and their .cbz/.cbr aliases) share one archive extraction
+// backend each; this is what tells the storage layer which one to use.
+const EXT_TO_ARCHIVE_FORMAT = {
+  cbz: 'zip',
+  zip: 'zip',
+  cbr: 'rar',
+  rar: 'rar',
 };
 
 function detectFileType(name) {
   const ext = name.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1];
-  return EXT_TO_FILE_TYPE[ext] || null;
+  return {
+    fileType: EXT_TO_FILE_TYPE[ext] || null,
+    archiveFormat: EXT_TO_ARCHIVE_FORMAT[ext],
+  };
 }
 
 export async function importBookFromDevice() {
